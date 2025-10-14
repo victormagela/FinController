@@ -54,10 +54,10 @@ class Transaction():
         self._description = description
 
     def __repr__(self):
-        return (f"Transaction(value = {self._value!r} "
-                f"transaction_type = {self._transaction_type!r} "
-                f"transaction_date = {self._transaction_date!r} "
-                f"category = {self._category!r} "
+        return (f"Transaction(value = {self._value!r}, "
+                f"transaction_type = {self._transaction_type!r}, "
+                f"transaction_date = {self._transaction_date!r}, "
+                f"category = {self._category!r}, "
                 f"description = {self._description!r})")
 
     def __str__(self):
