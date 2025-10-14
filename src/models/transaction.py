@@ -9,7 +9,7 @@ import locale
 try:
     locale.setlocale(locale.LC_ALL, 'pt_br.UTF-8')
 except Exception:
-    # Caso o sistema não reconheça, mantem a formatação padrão.
+    # Caso o sistema não reconheça, mantém a formatação padrão.
     pass
 
 class TransactionType(Enum):
@@ -36,7 +36,8 @@ class Transaction():
     _description (str): atributo opcional, adiciona uma descrição mais longa da transação (máximo de 200 caracteres e mínimo de 3).
 
     Exemplos:
-    Transaction(10.0, TransactionType.INCOME, datetime.date(2025, 10, 14)) 
+    Transaction(10.50, TransactionType.INCOME, datetime.date(2025, 10, 14))
+    Transaction(45, TransactionType.EXPENSE, datetime.date(2025, 09, 20), 'Alimentação', 'Saí para almoçar fora de casa')
     """
     def __init__(self, value: float, 
                  transaction_type: TransactionType, 
@@ -53,11 +54,11 @@ class Transaction():
         self._description = description
 
     def __repr__(self):
-        return (f"value = {self._value} "
-                f"transaction_type = {self._transaction_type} "
-                f"transaction_date = {self._transaction_date} "
-                f"category = '{self._category}' "
-                f"description = '{self._description}'")
+        return (f"Transaction(value = {self._value!r} "
+                f"transaction_type = {self._transaction_type!r} "
+                f"transaction_date = {self._transaction_date!r} "
+                f"category = {self._category!r} "
+                f"description = {self._description!r})")
 
     def __str__(self):
         return f'{self.transaction_type_str} de {self.value_formated_ptbr} em {self.transaction_date_str}.| {self._category}| {self._description}'
@@ -104,49 +105,49 @@ class Transaction():
 
     #Propriedades públicas ---------------------------------------------------------------------------------------------------------
     @property
-    def transaction_type(self):
+    def transaction_type(self) -> TransactionType:
         return self._transaction_type
 
     @property
-    def transaction_type_str(self):
+    def transaction_type_str(self) -> str:
         """Retorna o tipo da transação em formato mais legível."""
         return str(self._transaction_type.value).capitalize()
 
     @property
-    def value(self):
+    def value(self) -> float:
         return self._value
     
     @property
-    def value_formated_ptbr(self):
-        """Retorna o valor formato pt_br.UTF-8 para melhor legibilidade."""
+    def value_formated_ptbr(self) -> str:
+        """Retorna o valor formatado em moeda brasileira (ex. R$ 1.234,50) para melhor legibilidade."""
         return locale.currency(self._value, grouping=True)
 
     @property   
-    def transaction_date(self):
+    def transaction_date(self) -> datetime.date:
         return self._transaction_date
     
     @property
-    def transaction_date_str(self):
-        """Retorna a data da transação em formato legível."""
+    def transaction_date_str(self) -> str:
+        """Retorna a data da transação em formato DD/MM/AAAA para melhor legibilidade."""
         return datetime.datetime.strftime(self._transaction_date, '%d/%m/%Y')
 
     @property
-    def category(self):
+    def category(self) -> str:
         return self._category
     
     @category.setter
-    def category(self, category):
+    def category(self, category) -> None:
         if not isinstance(category, str) or 3 > len(category) or len(category) > 50:
             raise ValueError('Categoria inválida!')
         
         self._category = category
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self._description
     
     @description.setter
-    def description(self, description):
+    def description(self, description) -> None:
         if not isinstance(description, str) or 3 > len(description) or len(description) > 200:
             raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres e no máximo 200 caracteres')
         
@@ -161,6 +162,6 @@ class Transaction():
         if not isinstance(value, (float, int)) or not value > 0:
             raise ValueError('Valor inválido!')
         
-    def _validate_date(self, date) -> None:
-        if not isinstance(date, datetime.date) or date > datetime.date.today() :
+    def _validate_date(self, transaction_date) -> None:
+        if not isinstance(transaction_date, datetime.date) or transaction_date > datetime.date.today() :
             raise ValueError('Data inválida!')
