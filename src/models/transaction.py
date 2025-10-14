@@ -1,39 +1,92 @@
+from __future__ import annotations
+
 from enum import Enum
 import datetime
 import locale
-locale.setlocale(locale.LC_ALL, 'pt_br')
 
+# Tentativa de configurar locale para formatação em pt_br.
+# Nem todos os sistemas têm o mesmo nome de locale, por isso protegemos com um bloco try/except.
+try:
+    locale.setlocale(locale.LC_ALL, 'pt_br.UTF-8')
+except Exception:
+    # Caso o sistema não reconheça, mantem a formatação padrão.
+    pass
 
 class TransactionType(Enum):
+    """
+    Enumeração simples que representa os possíveis tipos de transação.
+
+    Valores:
+    INCOME: representa uma receita ('receita')
+    EXPENSE: representa uma despesa ('despesa')
+    """
     INCOME = 'receita'
     EXPENSE = 'despesa'
 
 
 class Transaction():
-    def __init__(self, value: float, transaction_type: TransactionType, date: datetime.date, category: str = 'Categoria não adicionada', description: str = 'Descrição não adicionada'):
+    """
+    Representa uma transação financeira simples.
+
+    Atributos privados:
+    _value (float): valor positivo da transação.
+    _transaction_type (TransactionType): tipo da transação (receita ou despesa).
+    _transaction_date (datetime.date): data que foi feita a transação (não aceita datas futuras).
+    _category (str): atributo opcional, define a categoria da transação (máximo de 50 caracteres e mínimo de 3).
+    _description (str): atributo opcional, adiciona uma descrição mais longa da transação (máximo de 200 caracteres e mínimo de 3).
+
+    Exemplos:
+    Transaction(10.0, TransactionType.INCOME, datetime.date(2025, 10, 14)) 
+    """
+    def __init__(self, value: float, 
+                 transaction_type: TransactionType, 
+                 transaction_date: datetime.date, 
+                 category: str = 'Categoria não adicionada', 
+                 description: str = 'Descrição não adicionada') -> None:
         self._validate_value(value)
         self._value = value
         self._validate_type(transaction_type)
         self._transaction_type = transaction_type
-        self._validate_date(date)
-        self._date = date
+        self._validate_date(transaction_date)
+        self._transaction_date = transaction_date
         self._category = category
         self._description = description
 
     def __repr__(self):
         return (f"value = {self._value} "
                 f"transaction_type = {self._transaction_type} "
-                f"date = {self._date} "
+                f"transaction_date = {self._transaction_date} "
                 f"category = '{self._category}' "
                 f"description = '{self._description}'")
 
     def __str__(self):
-        return f'{self.transaction_type_str} de {self.value_formated_ptbr} em {self.date_str}.| {self._category}| {self._description}'
+        return f'{self.transaction_type_str} de {self.value_formated_ptbr} em {self.transaction_date_str}.| {self._category}| {self._description}'
 
+    # Construtor alternativo ---------------------------------------------------------------------------------------------------------------------
     @staticmethod
-    def from_user_input(value_str: str, transaction_type_str: str, date_str: str, category: str = 'Categoria não adicionada', description: str = 'Descrição não adicionada'):
+    def from_user_input(value_str: str, 
+                        transaction_type_str: str, 
+                        transaction_date_str: str, 
+                        category: str = 'Categoria não adicionada', 
+                        description: str = 'Descrição não adicionada') -> Transaction:
+        """
+        Converte strings obtidas do usuário, e retorna uma instância de Transaction.
+
+        Argumentos:
+        value_str (str): string que contém um número.
+        transaction_type_str (str): string que pode ser 'receita' ou 'despesa', case insensitive.
+        transaction_date_str (str): string que contém uma data, deve estar no formato DD/MM/AAAA.
+        category (str): categoria opcional.
+        description (str): descrição opcional.
+
+        Returns:
+        Transaction construída a partir dos valores convertidos.
+
+        Raises:
+        Levanta erros ValueErro para qualquer entrada inválida.
+        """
         try:
-            value = float(value_str.strip())
+            value = float(value_str.strip().replace(',', '.'))
         except ValueError:
             raise ValueError(f'{value_str} não é um valor válido.')
         
@@ -43,18 +96,20 @@ class Transaction():
             raise ValueError(f'{transaction_type_str} não é um tipo válido. Use apenas "receita" ou "despesa".')
         
         try:
-            date = datetime.datetime.strptime(date_str.strip(), "%d/%m/%Y").date()
+            transaction_date = datetime.datetime.strptime(transaction_date_str.strip(), "%d/%m/%Y").date()
         except ValueError:
-            raise ValueError(f'{date_str} não é uma data válida. Siga o formato DD/MM/AAAA')
+            raise ValueError(f'{transaction_date_str} não é uma data válida. Siga o formato DD/MM/AAAA')
 
-        return Transaction(value, transaction_type, date, category, description)
+        return Transaction(value, transaction_type, transaction_date, category, description)
 
+    #Propriedades públicas ---------------------------------------------------------------------------------------------------------
     @property
     def transaction_type(self):
         return self._transaction_type
 
     @property
     def transaction_type_str(self):
+        """Retorna o tipo da transação em formato mais legível."""
         return str(self._transaction_type.value).capitalize()
 
     @property
@@ -63,15 +118,17 @@ class Transaction():
     
     @property
     def value_formated_ptbr(self):
+        """Retorna o valor formato pt_br.UTF-8 para melhor legibilidade."""
         return locale.currency(self._value, grouping=True)
 
     @property   
-    def date(self):
-        return self._date
+    def transaction_date(self):
+        return self._transaction_date
     
     @property
-    def date_str(self):
-        return datetime.datetime.strftime(self._date, '%d/%m/%Y')
+    def transaction_date_str(self):
+        """Retorna a data da transação em formato legível."""
+        return datetime.datetime.strftime(self._transaction_date, '%d/%m/%Y')
 
     @property
     def category(self):
@@ -95,6 +152,7 @@ class Transaction():
         
         self._description = description
 
+    # Métodos para validação interna -----------------------------------------------------------------------------------------------------
     def _validate_type(self, transaction_type) -> None:
         if not isinstance(transaction_type, TransactionType):
             raise ValueError('Tipo inválido!')
