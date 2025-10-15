@@ -39,6 +39,8 @@ class Transaction():
     Transaction(10.50, TransactionType.INCOME, datetime.date(2025, 10, 14))
     Transaction(45, TransactionType.EXPENSE, datetime.date(2025, 09, 20), 'Alimentação', 'Saí para almoçar fora de casa')
     """
+    _transaction_counter: int = 0 # Contador de instâncias
+
     def __init__(self, value: float, 
                  transaction_type: TransactionType, 
                  transaction_date: datetime.date, 
@@ -52,16 +54,35 @@ class Transaction():
         self._transaction_date = transaction_date
         self._category = category
         self._description = description
+        # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. Garante que cada instância terá um ID único.
+        Transaction._transaction_counter += 1
+        self._id: int = Transaction._transaction_counter 
 
     def __repr__(self):
-        return (f"Transaction(value = {self._value!r}, "
-                f"transaction_type = {self._transaction_type!r}, "
-                f"transaction_date = {self._transaction_date!r}, "
-                f"category = {self._category!r}, "
+        return (f"Transaction(value = {self._value!r}, \n"
+                f"transaction_type = {self._transaction_type.__class__.__name__}.{self._transaction_type._name_}, \n"
+                f"transaction_date = {self._transaction_date!r}, \n"
+                f"category = {self._category!r}, \n"
                 f"description = {self._description!r})")
 
     def __str__(self):
-        return f'{self.transaction_type_str} de {self.value_formated_ptbr} em {self.transaction_date_str}.| {self._category}| {self._description}'
+        return f'ID {self._id}| {self.transaction_type_str} de {self.value_formated_ptbr} em {self.transaction_date_str}.| {self._category}| {self._description}'
+    
+    # Métodos de classe --------------------------------------------------------------------------------------------------------------------------
+    @classmethod
+    def get_transaction_counter(cls):
+        """Método getter que retorna a contagem de transações para leitura"""
+        return cls._transaction_counter
+    
+    @classmethod
+    def set_transaction_counter(cls, value: int):
+        """Método setter para atualizar a contagem de transações. Utilizado quando obter transações de um arquivo"""
+        cls._transaction_counter = value
+    
+    @classmethod
+    def reset_transaction_counter(cls):
+        """Método privado para reiniciar a contagem de transações"""
+        cls._transaction_counter = 0
 
     # Construtor alternativo ---------------------------------------------------------------------------------------------------------------------
     @staticmethod
@@ -153,6 +174,10 @@ class Transaction():
         
         self._description = description
 
+    @property
+    def id(self):
+        return self._id
+
     # Métodos para validação interna -----------------------------------------------------------------------------------------------------
     def _validate_type(self, transaction_type) -> None:
         if not isinstance(transaction_type, TransactionType):
@@ -165,3 +190,39 @@ class Transaction():
     def _validate_date(self, transaction_date) -> None:
         if not isinstance(transaction_date, datetime.date) or transaction_date > datetime.date.today() :
             raise ValueError('Data inválida!')
+        
+
+# t1 = Transaction(550, TransactionType.INCOME, datetime.date(2025, 10, 14))
+# t2 = Transaction(550.50, TransactionType.EXPENSE, datetime.date(2025, 10, 15))
+# print(t1.id)
+# print(t2.id)
+# print(Transaction.get_transaction_counter())
+# t3 = Transaction.from_user_input('1100.55', 'receita', '15/10/2025')
+# print(t3.id)
+# print(Transaction.get_transaction_counter())
+# Transaction.reset_transaction_counter()
+# print(Transaction.get_transaction_counter())
+# Transaction.set_transaction_counter(3)
+# print(Transaction.get_transaction_counter())
+# print(t1)
+# print(t2)
+# print(t3)
+# print(t1.__repr__())
+# print(t2.__repr__())
+# print(t3.__repr__())
+
+# t1 = Transaction(value = 1100.55, 
+#                  transaction_type = TransactionType.INCOME, 
+#                  transaction_date = datetime.date(2025, 10, 15), 
+#                  category = 'Categoria não adicionada', 
+#                  description = 'Descrição não adicionada')
+
+# print(t1.__repr__())
+
+# t2 = Transaction(value = 1100.55, 
+# transaction_type = TransactionType.INCOME, 
+# transaction_date = datetime.date(2025, 10, 15), 
+# category = 'Categoria não adicionada', 
+# description = 'Descrição não adicionada')
+
+# print(t2)
