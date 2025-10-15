@@ -3,13 +3,73 @@ import datetime
 
 
 class TransactionManager:
+    """
+    Gerencia uma lista de transações, incluindo operações que ocorrem sobre essa, como adicionar, excluir, filtrar.
+
+    Atributos privados:
+    _transaction_list (list[Transaction]) = lista que contém todas as transações adicionadas. É iniciada como uma lista vazia.
+    """
     def __init__(self) -> None:
-        self._list_of_transactions: list[Transaction] = []
+        self._transaction_list: list[Transaction] = []
 
     def add_transaction(self, transaction: Transaction) -> None:
-        """Adiciona uma transação nova à lista, atribui a ela um id, e prepara o número id para um próximo item que possa ser adicionado."""
-        self._list_of_transactions.append(transaction)
+        """Adiciona uma (ou mais) transação nova à lista."""
+        self._transaction_list.append(transaction)
 
+    def del_transaction(self, *transaction_ids: int) -> None:
+        """Exclui uma transação (ou mais) da lista com base no ID dela. Levanta exceção caso não encontrar algum ID."""
+        for transaction_id in transaction_ids:
+            if not any(transaction.id == transaction_id for transaction in self._transaction_list):
+                raise ValueError(f'ID {transaction_id} não encontrado!')
+
+        for transaction_id in transaction_ids:
+            for transaction in self._transaction_list:
+                if transaction.id == transaction_id:
+                    self._transaction_list.remove(transaction)
+                    break
+    
+    def update_transaction_category(self, transaction_id: int, new_value: str):
+        """Altera a categoria da transação. Levanta exceção caso não encontrar o ID."""
+        for transaction in self._transaction_list:
+            if transaction.id == transaction_id:
+                transaction.category = new_value
+                return
+                    
+        raise ValueError(f'ID {transaction_id} não encontrado!')
+    
+    def update_transaction_description(self, transaction_id: int, new_value: str):
+        """Altera os descrição da transação. Levanta exceção caso não encontrar o ID."""
+        for transaction in self._transaction_list:
+            if transaction.id == transaction_id:
+                transaction.description = new_value
+                return
+                    
+        raise ValueError(f'ID {transaction_id} não encontrado!')
+    
     def get_all_transactions(self) -> list[Transaction]:
         """Retorna uma cópia da lista de todas as transações."""
-        return self._list_of_transactions.copy()
+        return self._transaction_list.copy()
+    
+
+# Testes -------------------------------------------------------------------------------------------------------
+
+if __name__ == '__main__':
+
+    t1 = Transaction(550, TransactionType.INCOME, datetime.date(2025, 10, 14))
+    t2 = Transaction(550.50, TransactionType.EXPENSE, datetime.date(2025, 10, 15))
+    t3 = Transaction(value = 1800.55, 
+                    transaction_type = TransactionType.INCOME, 
+                    transaction_date = datetime.date(2025, 10, 15), 
+                    category = 'Salário', 
+                    description = 'Pagamento mensal')
+
+    tm1 = TransactionManager()
+    tm1.add_transaction(t1)
+    tm1.add_transaction(t2)
+    tm1.add_transaction(t3)
+    tm1.update_transaction_category(1, 'Consumo')
+    tm1.update_transaction_description(1, 'Comprei um game novo.')
+    # print(tm1.get_all_transactions())
+    tm1.del_transaction(1)
+    tm1.del_transaction(3, 4)
+    print(tm1.get_all_transactions())
