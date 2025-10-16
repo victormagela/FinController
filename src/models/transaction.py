@@ -12,6 +12,7 @@ except Exception:
     # Caso o sistema não reconheça, mantém a formatação padrão.
     pass
 
+
 class TransactionType(Enum):
     """
     Enumeração simples que representa os possíveis tipos de transação.
@@ -22,6 +23,54 @@ class TransactionType(Enum):
     """
     INCOME = 'receita'
     EXPENSE = 'despesa'
+
+
+class IncomeCategory(Enum):
+    """
+    Enumeração que representa as possíveis categorias de receita.
+
+    Valores:
+    WAGE : representa o salário ('salário')
+    FREELANCE : representa receitas de trabalho freelancer ('freelance')
+    INVESTIMENT : representa o retorno financeiro de investimentos ('investimento')
+    SALE : representa receitas advindas de vendas ('venda')
+    GIFT : representa presentes em dinheiro ou doações que venha a receber ('presente')
+    REIMBURSEMENT : representa devoluções e reembolsos de despesas ('reembolso')
+    OTHER : representa uma receita que não se encaixa em nenhuma das categorias acimas, também é a categoria padrão para receitas não definidas pelo usuário ('outros') 
+    """
+    WAGE = 'salário'
+    FREELANCE = 'freelance'
+    INVESTIMENT = 'investimento'
+    SALE = 'venda'
+    GIFT = 'presente'
+    REIMBURSEMENT = 'reembolso'
+    OTHER = 'outros'
+
+
+class ExpenseCategory(Enum):
+    """
+    Enumeração que representa as possíveis categorias de despesa.
+
+    Valores:
+    FOOD : representa gastos com alimentação como mercados, restaurantes, delivery ('alimentação')
+    TRANSPORTATION : representa gastos com trasportes, como gasolina, transporte público, manutenção de veículo ('transporte')
+    HOUSING : representa gastos com moradia, como aluguel, manutenção, IPTU ('moradia')
+    HEALTH : representa gastos com saúde como hospital, remédios, academia ('saúde')
+    EDUCATION : representa gastos com educação como escola, faculdade, cursos ('educação')
+    LEISURE : representa gastos com lazer como cinema, jogos, parques, viagens ('lazer')
+    BILLS : representa gastos com contas como água, luz, internet ('contas')
+    CLOTHING : representa gastos com vestuário como roupas, calçados, acessórios ('vestuário')
+    OTHER : representa uma despesa que não se encaixa em nenhuma das categorias acimas, também é a categoria padrão para receitas não definidas pelo usuário ('outros')
+    """
+    FOOD = 'alimentação'
+    TRANSPORTATION = 'transporte'
+    HOUSING = 'moradia'
+    HEALTH = 'saúde'
+    EDUCATION  = 'educação'
+    LEISURE = 'lazer'
+    BILLS = 'contas'
+    CLOTHING = 'vestuário'
+    OTHER = 'outros'
 
 
 class Transaction():
@@ -44,7 +93,7 @@ class Transaction():
     def __init__(self, value: float, 
                  transaction_type: TransactionType, 
                  transaction_date: datetime.date, 
-                 category: str = 'Categoria não adicionada', 
+                 category: IncomeCategory|ExpenseCategory = None, 
                  description: str = 'Descrição não adicionada') -> None:
         self._validate_value(value)
         self._value = value
@@ -52,7 +101,14 @@ class Transaction():
         self._transaction_type = transaction_type
         self._validate_date(transaction_date)
         self._transaction_date = transaction_date
-        self._category = category
+        if category is None:
+            if transaction_type == TransactionType.INCOME:
+                self._category = IncomeCategory.OTHER
+            else:
+                self._category = ExpenseCategory.OTHER
+        else:
+            self._validate_category(category, transaction_type)
+            self._category = category
         self._description = description
         # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. Garante que cada instância terá um ID único.
         Transaction._transaction_counter += 1
@@ -89,7 +145,7 @@ class Transaction():
     def from_user_input(value_str: str, 
                         transaction_type_str: str, 
                         transaction_date_str: str, 
-                        category: str = 'Categoria não adicionada', 
+                        category_str: str = None, 
                         description: str = 'Descrição não adicionada') -> Transaction:
         """
         Converte strings obtidas do usuário, e retorna uma instância de Transaction.
@@ -98,8 +154,8 @@ class Transaction():
         value_str (str): string que contém um número.
         transaction_type_str (str): string que pode ser 'receita' ou 'despesa', case insensitive.
         transaction_date_str (str): string que contém uma data, deve estar no formato DD/MM/AAAA.
-        category (str): categoria opcional.
-        description (str): descrição opcional.
+        category (str): categoria opcional, com padrão 'outros'.
+        description (str): descrição opcional, com padrão 'descrição não adicionada'.
 
         Returns:
         Transaction construída a partir dos valores convertidos.
@@ -121,7 +177,25 @@ class Transaction():
             transaction_date = datetime.datetime.strptime(transaction_date_str.strip(), "%d/%m/%Y").date()
         except ValueError:
             raise ValueError(f'{transaction_date_str} não é uma data válida. Siga o formato DD/MM/AAAA')
+        
+        category = None
+        if category_str is not None:
+            category_str_normalized = category_str.strip().lower()
+        
+            if transaction_type == TransactionType.INCOME:
+                try:
+                    category = IncomeCategory(category_str_normalized)
+                
+                except ValueError:
+                    raise ValueError(f'{category_str} não é uma categoria de receita válida!')
 
+            elif transaction_type == TransactionType.EXPENSE:
+                try:
+                    category = ExpenseCategory(category_str_normalized)
+                
+                except ValueError:
+                    raise ValueError(f'{category_str} não é uma categoria de despesa válida!')
+            
         return Transaction(value, transaction_type, transaction_date, category, description)
 
     #Propriedades públicas ---------------------------------------------------------------------------------------------------------
@@ -157,9 +231,14 @@ class Transaction():
         return self._category
     
     @category.setter
-    def category(self, category) -> None:
-        if not isinstance(category, str) or 3 > len(category) or len(category) > 50:
-            raise ValueError('Categoria inválida!')
+    def category(self, category: IncomeCategory|ExpenseCategory) -> None:
+        if self._transaction_type == TransactionType.INCOME:
+            if not isinstance(category, IncomeCategory):
+                raise ValueError(f'{category} não é uma categoria de receita válida!')
+        
+        elif self._transaction_type == TransactionType.EXPENSE:
+            if not isinstance(category, ExpenseCategory):
+                raise ValueError(f'{category} não é uma categoria de despesa válida!')
         
         self._category = category
 
@@ -168,7 +247,7 @@ class Transaction():
         return self._description
     
     @description.setter
-    def description(self, description) -> None:
+    def description(self, description: str) -> None:
         if not isinstance(description, str) or 3 > len(description) or len(description) > 200:
             raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres e no máximo 200 caracteres')
         
@@ -181,19 +260,32 @@ class Transaction():
     # Métodos para validação interna -----------------------------------------------------------------------------------------------------
     def _validate_type(self, transaction_type) -> None:
         if not isinstance(transaction_type, TransactionType):
-            raise ValueError('Tipo inválido!')
+            raise ValueError(f'{transaction_type} não é um tipo válido!')
 
     def _validate_value(self, value) -> None:
+        """Verifica se um valor é válido e maior que zero"""
         if not isinstance(value, (float, int)) or not value > 0:
-            raise ValueError('Valor inválido!')
+            raise ValueError(f'{value} não é um valor válido!')
         
     def _validate_date(self, transaction_date) -> None:
+        """Verifica se uma data não é futura e se é válida"""
         if not isinstance(transaction_date, datetime.date) or transaction_date > datetime.date.today() :
-            raise ValueError('Data inválida!')
+            raise ValueError(f'{transaction_date} não é uma data válida!')
+        
+    def _validate_category(self, category, transaction_type) -> None:
+        """Verifica se é uma categoria de receita se a transação for desse tipo, ou se ela é de despesa caso a transação for desse tipo"""
+        if transaction_type == TransactionType.INCOME:
+            if not isinstance(category, IncomeCategory):
+                raise ValueError(f'{category} não é uma categoria de receita válida!')
+        
+        elif transaction_type == TransactionType.EXPENSE:
+            if not isinstance(category, ExpenseCategory):
+                raise ValueError(f'{category} não é uma categoria de despesa válida!')
 
 
 # Testes ----------------------------------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
+    ...
     # t1 = Transaction(550, TransactionType.INCOME, datetime.date(2025, 10, 14))
     # t2 = Transaction(550.50, TransactionType.EXPENSE, datetime.date(2025, 10, 15))
     # print(t1.id)
@@ -213,25 +305,23 @@ if __name__ == '__main__':
     # print(t2.__repr__())
     # print(t3.__repr__())
 
-    t1 = Transaction(value = 1100.55, 
-                    transaction_type = TransactionType.INCOME, 
-                    transaction_date = datetime.date(2025, 10, 15), 
-                    category = 'Categoria não adicionada', 
-                    description = 'Descrição não adicionada')
+    # t1 = Transaction(value = 1100.55, 
+    #                 transaction_type = TransactionType.INCOME, 
+    #                 transaction_date = datetime.date(2025, 10, 15), 
+    #                 category = 'Categoria não adicionada', 
+    #                 description = 'Descrição não adicionada')
 
-    print(repr(t1))
+    # print(repr(t1))
 
-    t2 = Transaction(value=1100.55, 
-    transaction_type=TransactionType.INCOME, 
-    transaction_date=datetime.date(2025, 10, 15), 
-    category='Categoria não adicionada', 
-    description='Descrição não adicionada')
-    print(t2)
+    # t2 = Transaction(value=1100.55, 
+    # transaction_type=TransactionType.INCOME, 
+    # transaction_date=datetime.date(2025, 10, 15), 
+    # category='Categoria não adicionada', 
+    # description='Descrição não adicionada')
+    # print(t2)
 
     # t2 = Transaction(value = 1100.55, 
     # transaction_type = TransactionType.INCOME, 
     # transaction_date = datetime.date(2025, 10, 15), 
     # category = 'Categoria não adicionada', 
     # description = 'Descrição não adicionada')
-
-    # print(t2)

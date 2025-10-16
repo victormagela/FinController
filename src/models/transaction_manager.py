@@ -1,4 +1,4 @@
-from transaction import Transaction, TransactionType
+from transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
 from datetime import datetime, date
 
 
@@ -28,7 +28,7 @@ class TransactionManager:
                     self._transaction_list.remove(transaction)
                     break
     
-    def update_transaction_category(self, transaction_id: int, new_value: str):
+    def update_transaction_category(self, transaction_id: int, new_value: IncomeCategory|ExpenseCategory):
         """Altera a categoria da transação. Levanta exceção caso não encontrar o ID."""
         for transaction in self._transaction_list:
             if transaction.id == transaction_id:
@@ -54,10 +54,9 @@ class TransactionManager:
         """Filtra a lista por um alcance de valor, e retorna uma nova lista com somente as transações neste alcance."""
         return [transaction for transaction in self._transaction_list if start <= transaction.value <= end]
     
-    def filter_by_type(self, transaction_type: str) -> list[Transaction]:
+    def filter_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
         """Filtra a lista por tipo de transação, e retorna uma nova lista com somente as transações deste tipo"""
-        normalized = transaction_type.lower().strip()
-        return [transaction for transaction in self._transaction_list if transaction.transaction_type.value == normalized]
+        return [transaction for transaction in self._transaction_list if transaction.transaction_type == transaction_type]
     
     def filter_by_date_range(self, start: date = None, end: date = None) -> list[Transaction]:
         """Filtra a lista por período, e retorna uma nova lista com somente as transações feitas neste período"""
@@ -69,32 +68,47 @@ class TransactionManager:
 
         return [transaction for transaction in self._transaction_list if start <= transaction.transaction_date <= end]
 
-    def filter_by_category(self, category: str) -> list[Transaction]:
+    def filter_by_category(self, category: IncomeCategory|ExpenseCategory) -> list[Transaction]:
         """Filtra a lista por categoria, e retorna uma nova lista com somente as transações desta categoria"""
-        normalized = category.lower().strip()
-        return [transaction for transaction in self._transaction_list if transaction.category.lower().strip() == normalized]
+        return [transaction for transaction in self._transaction_list if transaction.category == category]
     
 
 # Testes -------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-
+    # Teste 1: Criar transação SEM categoria (deve usar OUTROS automaticamente)
     t1 = Transaction(550, TransactionType.INCOME, date(2025, 10, 14))
-    t2 = Transaction(550.50, TransactionType.EXPENSE, date(2025, 10, 15))
-    t3 = Transaction(value = 1800.55, 
-                    transaction_type = TransactionType.INCOME, 
-                    transaction_date = date(2025, 10, 15), 
-                    category = 'Salário', 
-                    description = 'Pagamento mensal')
-
-    tm1 = TransactionManager()
-    tm1.add_transaction(t1)
-    tm1.add_transaction(t2)
-    tm1.add_transaction(t3)
-    # tm1.update_transaction_category(1, 'Consumo')
-    # tm1.update_transaction_description(1, 'Comprei um game novo.')
-    # # print(tm1.get_all_transactions())
-    # tm1.del_transaction(1)
-    # tm1.del_transaction(3, 4)
-    # print(tm1.get_all_transactions())
-    print(tm1.filter_by_value_range())
+    print(f"T1 - Categoria automática: {t1.category.value}")  # Deve printar 'outros'
+    
+    # Teste 2: Criar transação COM categoria válida
+    t2 = Transaction(550.50, TransactionType.EXPENSE, date(2025, 10, 15), 
+                     category=ExpenseCategory.FOOD)
+    print(f"T2 - Categoria definida: {t2.category.value}")  # Deve printar 'alimentação'
+    
+    # Teste 3: Usar from_user_input com categoria
+    t3 = Transaction.from_user_input('1800.55', 'receita', '15/10/2025', 
+                                     'salário', 'Pagamento mensal')
+    print(f"T3 - Categoria via input: {t3.category.value}")  # Deve printar 'salário'
+    
+    # Teste 4: Tentar categoria inválida (deve dar erro)
+    try:
+        t4 = Transaction.from_user_input('100', 'receita', '16/10/2025', 'alimentação')
+        print("ERRO: Deveria ter dado exceção!")
+    except ValueError as e:
+        print(f"✓ Erro esperado capturado: {e}")
+    
+    # Teste 5: TransactionManager - adicionar e filtrar
+    tm = TransactionManager()
+    tm.add_transaction(t1)
+    tm.add_transaction(t2)
+    tm.add_transaction(t3)
+    
+    receitas = tm.filter_by_type(TransactionType.INCOME)
+    print(f"\nTotal de receitas: {len(receitas)}")
+    
+    alimentacao = tm.filter_by_category(ExpenseCategory.FOOD)
+    print(f"Transações de alimentação: {len(alimentacao)}")
+    
+    # Teste 6: Atualizar categoria
+    tm.update_transaction_category(2, ExpenseCategory.TRANSPORTATION)
+    print(f"T2 após update: {t2.category.value}")  # Deve printar 'transporte'
