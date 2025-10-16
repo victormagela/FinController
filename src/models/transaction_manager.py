@@ -1,5 +1,5 @@
 from transaction import Transaction, TransactionType
-import datetime
+from datetime import datetime, date
 
 
 class TransactionManager:
@@ -50,16 +50,36 @@ class TransactionManager:
         """Retorna uma cópia da lista de todas as transações."""
         return self._transaction_list.copy()
     
+    def filter_by_type(self, transaction_type: str) -> list[Transaction]:
+        """Filtra a lista por tipo de transação, e retorna uma nova lista com somente as transações deste tipo"""
+        normalized = transaction_type.lower().strip()
+        return [transaction for transaction in self._transaction_list if transaction.transaction_type.value == normalized]
+    
+    def filter_by_date_range(self, start: date = None, end: date = None) -> list[Transaction]:
+        """Filtra a lista por período, e retorna uma nova lista com somente as transações feitas neste período"""
+        if start is None:
+            start = date.min
+        
+        if end is None:
+            end = date.max
+
+        return [transaction for transaction in self._transaction_list if start <= transaction.transaction_date <= end]
+
+    def filter_by_category(self, category: str) -> list[Transaction]:
+        """Filtra a lista por categoria, e retorna uma nova lista com somente as transações desta categoria"""
+        normalized = category.lower().strip()
+        return [transaction for transaction in self._transaction_list if transaction.category.lower().strip() == normalized]
+    
 
 # Testes -------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 
-    t1 = Transaction(550, TransactionType.INCOME, datetime.date(2025, 10, 14))
-    t2 = Transaction(550.50, TransactionType.EXPENSE, datetime.date(2025, 10, 15))
+    t1 = Transaction(550, TransactionType.INCOME, date(2025, 10, 14))
+    t2 = Transaction(550.50, TransactionType.EXPENSE, date(2025, 10, 15))
     t3 = Transaction(value = 1800.55, 
                     transaction_type = TransactionType.INCOME, 
-                    transaction_date = datetime.date(2025, 10, 15), 
+                    transaction_date = date(2025, 10, 15), 
                     category = 'Salário', 
                     description = 'Pagamento mensal')
 
@@ -67,9 +87,10 @@ if __name__ == '__main__':
     tm1.add_transaction(t1)
     tm1.add_transaction(t2)
     tm1.add_transaction(t3)
-    tm1.update_transaction_category(1, 'Consumo')
-    tm1.update_transaction_description(1, 'Comprei um game novo.')
+    # tm1.update_transaction_category(1, 'Consumo')
+    # tm1.update_transaction_description(1, 'Comprei um game novo.')
+    # # print(tm1.get_all_transactions())
+    # tm1.del_transaction(1)
+    # tm1.del_transaction(3, 4)
     # print(tm1.get_all_transactions())
-    tm1.del_transaction(1)
-    tm1.del_transaction(3, 4)
-    print(tm1.get_all_transactions())
+    print(tm1.filter_by_date_range())
