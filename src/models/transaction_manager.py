@@ -50,6 +50,10 @@ class TransactionManager:
         """Retorna uma cópia da lista de todas as transações."""
         return self._transaction_list.copy()
     
+    def filter_by_value_range(self, start: int|float = 0, end: int|float = 1e20):
+        """Filtra a lista por um alcance de valor, e retorna uma nova lista com somente as transações neste alcance."""
+        return [transaction for transaction in self._transaction_list if start <= transaction.value <= end]
+    
     def filter_by_type(self, transaction_type: str) -> list[Transaction]:
         """Filtra a lista por tipo de transação, e retorna uma nova lista com somente as transações deste tipo"""
         normalized = transaction_type.lower().strip()
@@ -93,4 +97,4 @@ if __name__ == '__main__':
     # tm1.del_transaction(1)
     # tm1.del_transaction(3, 4)
     # print(tm1.get_all_transactions())
-    print(tm1.filter_by_date_range())
+    print(tm1.filter_by_value_range())
