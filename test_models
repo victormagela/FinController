@@ -1,0 +1,42 @@
+from src.models.transaction import Transaction, TransactionType, ExpenseCategory, IncomeCategory
+from src.models.transaction_manager import TransactionManager
+from datetime import date
+
+
+if __name__ == '__main__':
+    # Teste 1: Criar transação SEM categoria (deve usar OUTROS automaticamente)
+    t1 = Transaction(550, TransactionType.INCOME, date(2025, 10, 14))
+    print(f"T1 - Categoria automática: {t1.category.value}")  # Deve printar 'outros'
+    
+    # Teste 2: Criar transação COM categoria válida
+    t2 = Transaction(550.50, TransactionType.EXPENSE, date(2025, 10, 15), 
+                     category=ExpenseCategory.FOOD)
+    print(f"T2 - Categoria definida: {t2.category.value}")  # Deve printar 'alimentação'
+    
+    # Teste 3: Usar from_user_input com categoria
+    t3 = Transaction.from_user_input('1800.55', 'receita', '15/10/2025', 
+                                     'salário', 'Pagamento mensal')
+    print(f"T3 - Categoria via input: {t3.category.value}")  # Deve printar 'salário'
+    
+    # Teste 4: Tentar categoria inválida (deve dar erro)
+    try:
+        t4 = Transaction.from_user_input('100', 'receita', '16/10/2025', 'alimentação')
+        print("ERRO: Deveria ter dado exceção!")
+    except ValueError as e:
+        print(f"✓ Erro esperado capturado: {e}")
+    
+    # Teste 5: TransactionManager - adicionar e filtrar
+    tm = TransactionManager()
+    tm.add_transaction(t1)
+    tm.add_transaction(t2)
+    tm.add_transaction(t3)
+    
+    receitas = tm.filter_by_type(TransactionType.INCOME)
+    print(f"\nTotal de receitas: {len(receitas)}")
+    
+    alimentacao = tm.filter_by_category(ExpenseCategory.FOOD)
+    print(f"Transações de alimentação: {len(alimentacao)}")
+    
+    # Teste 6: Atualizar categoria
+    tm.update_transaction_category(2, ExpenseCategory.TRANSPORTATION)
+    print(f"T2 após update: {t2.category.value}")  # Deve printar 'transporte'
