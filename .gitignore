@@ -5,3 +5,4 @@ __pychache__/
 test_ui.py
 test_models.py
 tests/
+.pytest_cache
