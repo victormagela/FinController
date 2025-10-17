@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-import datetime
+from datetime import date, datetime
 import locale
 
 # Tentativa de configurar locale para formatação em pt_br.
@@ -92,9 +92,9 @@ class Transaction():
 
     def __init__(self, amount: float, 
                  transaction_type: TransactionType, 
-                 transaction_date: datetime.date, 
+                 transaction_date: date, 
                  category: IncomeCategory|ExpenseCategory = None, 
-                 description: str = 'Descrição não adicionada') -> None:
+                 description: str = None) -> None:
         self._validate_amount(amount)
         self._amount = amount
         self._validate_type(transaction_type)
@@ -109,7 +109,10 @@ class Transaction():
         else:
             self._validate_category(category, transaction_type)
             self._category = category
-        self._description = description
+        if description is None:
+            self._description = 'Descrição não adicionada'
+        else:
+            self._description = description
         # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. Garante que cada instância terá um ID único.
         Transaction._transaction_counter += 1
         self._id: int = Transaction._transaction_counter 
@@ -140,64 +143,6 @@ class Transaction():
         """Método privado para reiniciar a contagem de transações"""
         cls._transaction_counter = 0
 
-    # Construtor alternativo ---------------------------------------------------------------------------------------------------------------------
-    @staticmethod
-    def from_user_input(amount_str: str, 
-                        transaction_type_str: str, 
-                        transaction_date_str: str, 
-                        category_str: str = None, 
-                        description: str = 'Descrição não adicionada') -> Transaction:
-        """
-        Converte strings obtidas do usuário, e retorna uma instância de Transaction.
-
-        Argumentos:
-        value_str (str): string que contém um número.
-        transaction_type_str (str): string que pode ser 'receita' ou 'despesa', case insensitive.
-        transaction_date_str (str): string que contém uma data, deve estar no formato DD/MM/AAAA.
-        category (str): categoria opcional, com padrão 'outros'.
-        description (str): descrição opcional, com padrão 'descrição não adicionada'.
-
-        Returns:
-        Transaction construída a partir dos valores convertidos.
-
-        Raises:
-        Levanta erros ValueErro para qualquer entrada inválida.
-        """
-        try:
-            amount = float(amount_str.strip().replace(',', '.'))
-        except ValueError:
-            raise ValueError(f'{amount_str} não é um valor válido.')
-        
-        try:
-            transaction_type = TransactionType(transaction_type_str.lower().strip())
-        except ValueError:
-            raise ValueError(f'{transaction_type_str} não é um tipo válido. Use apenas "receita" ou "despesa".')
-        
-        try:
-            transaction_date = datetime.datetime.strptime(transaction_date_str.strip(), "%d/%m/%Y").date()
-        except ValueError:
-            raise ValueError(f'{transaction_date_str} não é uma data válida. Siga o formato DD/MM/AAAA')
-        
-        category = None
-        if category_str is not None:
-            category_str_normalized = category_str.strip().lower()
-        
-            if transaction_type == TransactionType.INCOME:
-                try:
-                    category = IncomeCategory(category_str_normalized)
-                
-                except ValueError:
-                    raise ValueError(f'{category_str} não é uma categoria de receita válida!')
-
-            elif transaction_type == TransactionType.EXPENSE:
-                try:
-                    category = ExpenseCategory(category_str_normalized)
-                
-                except ValueError:
-                    raise ValueError(f'{category_str} não é uma categoria de despesa válida!')
-            
-        return Transaction(amount, transaction_type, transaction_date, category, description)
-
     #Propriedades públicas ---------------------------------------------------------------------------------------------------------
     @property
     def transaction_type(self) -> TransactionType:
@@ -218,13 +163,13 @@ class Transaction():
         return locale.currency(self._amount, grouping=True)
 
     @property   
-    def transaction_date(self) -> datetime.date:
+    def transaction_date(self) -> date:
         return self._transaction_date
     
     @property
     def transaction_date_str(self) -> str:
         """Retorna a data da transação em formato DD/MM/AAAA para melhor legibilidade."""
-        return datetime.datetime.strftime(self._transaction_date, '%d/%m/%Y')
+        return datetime.strftime(self._transaction_date, '%d/%m/%Y')
 
     @property
     def category(self) -> str:
@@ -269,7 +214,7 @@ class Transaction():
         
     def _validate_date(self, transaction_date) -> None:
         """Verifica se uma data não é futura e se é válida"""
-        if not isinstance(transaction_date, datetime.date) or transaction_date > datetime.date.today() :
+        if not isinstance(transaction_date, date) or transaction_date > date.today() :
             raise ValueError(f'{transaction_date} não é uma data válida!')
         
     def _validate_category(self, category, transaction_type) -> None:
