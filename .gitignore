@@ -2,3 +2,5 @@
 __pychache__/
 *.pyc
 .env
+test_ui.py
+test_models.py
