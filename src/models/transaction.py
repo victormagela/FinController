@@ -90,13 +90,13 @@ class Transaction():
     """
     _transaction_counter: int = 0 # Contador de instâncias
 
-    def __init__(self, value: float, 
+    def __init__(self, amount: float, 
                  transaction_type: TransactionType, 
                  transaction_date: datetime.date, 
                  category: IncomeCategory|ExpenseCategory = None, 
                  description: str = 'Descrição não adicionada') -> None:
-        self._validate_value(value)
-        self._value = value
+        self._validate_amount(amount)
+        self._amount = amount
         self._validate_type(transaction_type)
         self._transaction_type = transaction_type
         self._validate_date(transaction_date)
@@ -115,14 +115,14 @@ class Transaction():
         self._id: int = Transaction._transaction_counter 
 
     def __repr__(self):
-        return (f"Transaction(value={self._value!r}, \n"
+        return (f"Transaction(value={self._amount!r}, \n"
                 f"transaction_type={self._transaction_type.__class__.__name__}.{self._transaction_type.name}, \n"
                 f"transaction_date={self._transaction_date!r}, \n"
                 f"category={self._category!r}, \n"
                 f"description={self._description!r})")
 
     def __str__(self):
-        return f'ID {self._id}| {self.transaction_type_str} de {self.value_formated_ptbr} em {self.transaction_date_str}.| {self._category}| {self._description}'
+        return f'ID {self._id}| {self.transaction_type_str} de {self.amount_formatted_brazil} em {self.transaction_date_str}.| {self._category}| {self._description}'
     
     # Métodos de classe --------------------------------------------------------------------------------------------------------------------------
     @classmethod
@@ -142,7 +142,7 @@ class Transaction():
 
     # Construtor alternativo ---------------------------------------------------------------------------------------------------------------------
     @staticmethod
-    def from_user_input(value_str: str, 
+    def from_user_input(amount_str: str, 
                         transaction_type_str: str, 
                         transaction_date_str: str, 
                         category_str: str = None, 
@@ -164,9 +164,9 @@ class Transaction():
         Levanta erros ValueErro para qualquer entrada inválida.
         """
         try:
-            value = float(value_str.strip().replace(',', '.'))
+            amount = float(amount_str.strip().replace(',', '.'))
         except ValueError:
-            raise ValueError(f'{value_str} não é um valor válido.')
+            raise ValueError(f'{amount_str} não é um valor válido.')
         
         try:
             transaction_type = TransactionType(transaction_type_str.lower().strip())
@@ -196,7 +196,7 @@ class Transaction():
                 except ValueError:
                     raise ValueError(f'{category_str} não é uma categoria de despesa válida!')
             
-        return Transaction(value, transaction_type, transaction_date, category, description)
+        return Transaction(amount, transaction_type, transaction_date, category, description)
 
     #Propriedades públicas ---------------------------------------------------------------------------------------------------------
     @property
@@ -209,13 +209,13 @@ class Transaction():
         return str(self._transaction_type.value).capitalize()
 
     @property
-    def value(self) -> float:
-        return self._value
+    def amount(self) -> float:
+        return self._amount
     
     @property
-    def value_formated_ptbr(self) -> str:
+    def amount_formatted_brazil(self) -> str:
         """Retorna o valor formatado em moeda brasileira (ex. R$ 1.234,50) para melhor legibilidade."""
-        return locale.currency(self._value, grouping=True)
+        return locale.currency(self._amount, grouping=True)
 
     @property   
     def transaction_date(self) -> datetime.date:
@@ -262,10 +262,10 @@ class Transaction():
         if not isinstance(transaction_type, TransactionType):
             raise ValueError(f'{transaction_type} não é um tipo válido!')
 
-    def _validate_value(self, value) -> None:
+    def _validate_amount(self, amount) -> None:
         """Verifica se um valor é válido e maior que zero"""
-        if not isinstance(value, (float, int)) or not value > 0:
-            raise ValueError(f'{value} não é um valor válido!')
+        if not isinstance(amount, (float, int)) or not amount > 0:
+            raise ValueError(f'{amount} não é um valor válido!')
         
     def _validate_date(self, transaction_date) -> None:
         """Verifica se uma data não é futura e se é válida"""

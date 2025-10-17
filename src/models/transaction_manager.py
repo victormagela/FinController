@@ -1,5 +1,5 @@
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
-from datetime import datetime, date
+from datetime import date
 
 
 class TransactionManager:
@@ -50,9 +50,9 @@ class TransactionManager:
         """Retorna uma cópia da lista de todas as transações."""
         return self._transaction_list.copy()
     
-    def filter_by_value_range(self, start: int|float = 0, end: int|float = 1e20):
+    def filter_by_amount_range(self, start: int|float = 0, end: int|float = 1e20):
         """Filtra a lista por um alcance de valor, e retorna uma nova lista com somente as transações neste alcance."""
-        return [transaction for transaction in self._transaction_list if start <= transaction.value <= end]
+        return [transaction for transaction in self._transaction_list if start <= transaction.amount <= end]
     
     def filter_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
         """Filtra a lista por tipo de transação, e retorna uma nova lista com somente as transações deste tipo"""
