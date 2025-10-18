@@ -6,46 +6,72 @@ from src.models.transaction import Transaction, TransactionType, IncomeCategory,
 
 class ParsedTransaction(TypedDict):
     amount : float
-    transaction_type : str
+    transaction_type : TransactionType
     transaction_date : date
-    category : NotRequired[str|None]
-    description : NotRequired[str|None]
-
-
+    category : NotRequired[IncomeCategory | ExpenseCategory | None]
+    description : NotRequired[str | None]
 
 
 class DataParser:
     def parse(self, str_dict: dict[str, str]) -> ParsedTransaction:
+        """
+        Converte dados recebidos do usuário nos tipos corretos para a construção do objeto Transaction.
+        
+        Returns:
+        Dicionário com chaves str e valores com os dados que foram convertidos.
+
+        Raises:
+        Levanta erros ValueErro para qualquer entrada inválida.
+        """
+
         DATE_FORMAT = "%d/%m/%Y"
         
-        amount_str = str_dict['amount']
-        transaction_type_str = str_dict['transaction_type']
-        transacation_date_str = str_dict['transaction_date']
-        category_str = str_dict.get('category', None)
-        description = str_dict.get('description', None)
+        amount_str: str = str_dict['amount']
+        transaction_type_str: str = str_dict['transaction_type']
+        transaction_date_str: str = str_dict['transaction_date']
+        category_str: str | None = str_dict.get('category', None)
+        description: str | None = str_dict.get('description', None)
 
         try:
-            amount_str_normalized = amount_str.strip().replace(',', '.')
+            amount_str_normalized = amount_str.strip()
+            if ',' in amount_str_normalized:
+                amount_str_normalized = amount_str.strip().replace('.', '').replace(',', '.')
             amount = float(amount_str_normalized)
         except ValueError:
             raise ValueError(f'{amount_str} não é um valor válido.')
-        
-        transaction_type_str_normalized = transaction_type_str.strip().lower()
+
+        try:
+            transaction_type_str_normalized = transaction_type_str.strip().lower()
+            transaction_type = TransactionType(transaction_type_str_normalized)
+        except ValueError:
+            raise ValueError(f'{transaction_type_str} não é um tipo válido. Só deve ser aceito "receita" ou "despesa".')
         
         try:
-            transacation_date_str_normalized = transacation_date_str.strip()
-            transaction_date = datetime.strptime(transacation_date_str_normalized, DATE_FORMAT).date()
+            transaction_date_str_normalized = transaction_date_str.strip()
+            transaction_date = datetime.strptime(transaction_date_str_normalized, DATE_FORMAT).date()
         except ValueError:
-            raise ValueError(f'{transacation_date_str_normalized} não é uma data válida. Siga o formato DD/MM/AAAA')
+            raise ValueError(f'{transaction_date_str} não é uma data válida. Siga o formato DD/MM/AAAA')
         
+        category = None
         if category_str is not None:
             category_str_normalized = category_str.strip().lower()
-        
+            try:
+                if transaction_type == TransactionType.INCOME:
+                    category = IncomeCategory(category_str_normalized)
+                
+                elif transaction_type == TransactionType.EXPENSE:
+                    category = ExpenseCategory(category_str_normalized)
+            except ValueError:
+                if transaction_type == TransactionType.INCOME:
+                    raise ValueError(f'{category_str} não é uma categoria de receita válida.')
+                elif transaction_type == TransactionType.EXPENSE:
+                    raise ValueError(f'{category_str} não é uma categoria de despesa válida.')
+                        
         return {
             'amount' : amount,
-            'transaction_type' : transaction_type_str_normalized,
+            'transaction_type' : transaction_type,
             'transaction_date' : transaction_date,
-            'category' : category_str_normalized if category_str is not None else category_str,
+            'category' : category,
             'description' : description
         }
     
@@ -55,52 +81,12 @@ class TransactionFactory:
 
     @staticmethod
     def from_parser(parsed_dict: ParsedTransaction) -> Transaction:
-        """
-        Converte strings obtidas do DataParser, e retorna uma instância de Transaction.
+        """Retorna uma instância de Transaction a partir do dicionário obtido de DataParser com os tipos corretos."""        
 
-        Argumentos:
-        amount (float): valor da transação.
-        transaction_type_normalized (str): string que pode ser 'receita' ou 'despesa', case insensitive.
-        transaction_date_str (date): string que contém uma data, deve estar no formato DD/MM/AAAA.
-        category_str (str): categoria opcional, com padrão 'outros'.
-        description (str): descrição opcional, com padrão 'descrição não adicionada'.
-
-        Returns:
-        Transaction construída a partir dos valores convertidos e obtidos.
-
-        Raises:
-        Levanta erros ValueErro para qualquer entrada inválida.
-        """        
-
-        amount = parsed_dict['amount']
-        transaction_type_normalized = parsed_dict['transaction_type']
-        transaction_date = parsed_dict['transaction_date']
-        category_str = parsed_dict.get('category', None)
-        description = parsed_dict.get('description', None)
-
-        try:
-            transaction_type = TransactionType(transaction_type_normalized)
-        except ValueError:
-            raise ValueError(f'{transaction_type_normalized} não é um tipo válido. Use apenas "receita" ou "despesa".')
-
-        if category_str is not None:
-            category_str_normalized = category_str.strip().lower()
-        
-            if transaction_type == TransactionType.INCOME:
-                try:
-                    category = IncomeCategory(category_str_normalized)
-                
-                except ValueError:
-                    raise ValueError(f'{category_str} não é uma categoria de receita válida!')   
-
-            elif transaction_type == TransactionType.EXPENSE:
-                try:
-                    category = ExpenseCategory(category_str_normalized)
-                
-                except ValueError:
-                    raise ValueError(f'{category_str} não é uma categoria de despesa válida!')
-        
-        else:
-            category = None
+        amount: float = parsed_dict['amount']
+        transaction_type: TransactionType = parsed_dict['transaction_type']
+        transaction_date: date = parsed_dict['transaction_date']
+        category: ExpenseCategory | IncomeCategory | None = parsed_dict.get('category', None)
+        description: str | None = parsed_dict.get('description', None)
                 
         return Transaction(amount, transaction_type, transaction_date, category, description)
