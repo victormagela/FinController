@@ -44,7 +44,12 @@ class IncomeCategory(Enum):
     SALE = 'venda'
     GIFT = 'presente'
     REIMBURSEMENT = 'reembolso'
-    OTHER = 'outros'
+    OTHERS = 'outros'
+
+    @classmethod
+    def get_all_values(cls):
+        """Retorna uma lista com todos os valores possíveis de categoria."""
+        return [income.value for income in cls]
 
 
 class ExpenseCategory(Enum):
@@ -70,7 +75,12 @@ class ExpenseCategory(Enum):
     LEISURE = 'lazer'
     BILLS = 'contas'
     CLOTHING = 'vestuário'
-    OTHER = 'outros'
+    OTHERS = 'outros'
+
+    @classmethod
+    def get_all_values(cls):
+        """Retorna uma lista com todos os valores possíveis de categoria."""
+        return [expense.value for expense in cls]
 
 
 class Transaction():
@@ -93,26 +103,27 @@ class Transaction():
     def __init__(self, amount: float, 
                  transaction_type: TransactionType, 
                  transaction_date: date, 
-                 category: IncomeCategory|ExpenseCategory = None, 
+                 category: IncomeCategory | ExpenseCategory = None, 
                  description: str = None) -> None:
         self._validate_amount(amount)
-        self._amount = amount
+        self._amount: float = amount
         self._validate_type(transaction_type)
-        self._transaction_type = transaction_type
+        self._transaction_type: TransactionType = transaction_type
         self._validate_date(transaction_date)
-        self._transaction_date = transaction_date
+        self._transaction_date: date = transaction_date
         if category is None:
-            if transaction_type == TransactionType.INCOME:
-                self._category = IncomeCategory.OTHER
-            else:
-                self._category = ExpenseCategory.OTHER
+            match transaction_type:
+                case TransactionType.INCOME:
+                    self._category: IncomeCategory = IncomeCategory.OTHERS
+                case TransactionType.EXPENSE:
+                    self._category: ExpenseCategory = ExpenseCategory.OTHERS
         else:
-            self._validate_category(category, transaction_type)
-            self._category = category
+            self._validate_category(category)
+            self._category: IncomeCategory | ExpenseCategory = category
         if description is None:
-            self._description = 'Descrição não adicionada'
+            self._description: str = 'Descrição não adicionada'
         else:
-            self._description = description
+            self._description: str = description
         # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. Garante que cada instância terá um ID único.
         Transaction._transaction_counter += 1
         self._id: int = Transaction._transaction_counter 
@@ -125,9 +136,10 @@ class Transaction():
                 f"description={self._description!r})")
 
     def __str__(self):
-        return f'ID {self._id}| {self.transaction_type_str} de {self.amount_formatted_brazil} em {self.transaction_date_str}.| {self._category}| {self._description}'
+        return (f'ID {self._id}| {self.transaction_type_str} de {self.amount_formatted_brazil} em '
+        f'{self.transaction_date_str}.| {self._category}| {self._description}')
     
-    # Métodos de classe --------------------------------------------------------------------------------------------------------------------------
+    # Métodos de classe -----------------------------------------------------------------------------------------------
     @classmethod
     def get_transaction_counter(cls):
         """Método getter que retorna a contagem de transações para leitura"""
@@ -143,7 +155,7 @@ class Transaction():
         """Método privado para reiniciar a contagem de transações"""
         cls._transaction_counter = 0
 
-    #Propriedades públicas ---------------------------------------------------------------------------------------------------------
+    #Propriedades públicas --------------------------------------------------------------------------------------------
     @property
     def transaction_type(self) -> TransactionType:
         return self._transaction_type
@@ -176,16 +188,15 @@ class Transaction():
         return self._category
     
     @category.setter
-    def category(self, category: IncomeCategory|ExpenseCategory) -> None:
-        if self._transaction_type == TransactionType.INCOME:
-            if not isinstance(category, IncomeCategory):
-                raise ValueError(f'{category} não é uma categoria de receita válida!')
+    def category(self, new_category: IncomeCategory | ExpenseCategory | None=None) -> None:
+        if new_category is None:
+            new_category = IncomeCategory.OTHERS if self._transaction_type == TransactionType.INCOME \
+            else ExpenseCategory.OTHERS
         
-        elif self._transaction_type == TransactionType.EXPENSE:
-            if not isinstance(category, ExpenseCategory):
-                raise ValueError(f'{category} não é uma categoria de despesa válida!')
+        else:
+            self._validate_category(new_category)
         
-        self._category = category
+        self._category = new_category
 
     @property
     def description(self) -> str:
@@ -194,7 +205,8 @@ class Transaction():
     @description.setter
     def description(self, description: str) -> None:
         if not isinstance(description, str) or 3 > len(description) or len(description) > 200:
-            raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres e no máximo 200 caracteres')
+            raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres' \
+            ' e no máximo 200 caracteres')
         
         self._description = description
 
@@ -202,7 +214,7 @@ class Transaction():
     def id(self):
         return self._id
 
-    # Métodos para validação interna -----------------------------------------------------------------------------------------------------
+    # Métodos para validação interna ----------------------------------------------------------------------------------
     def _validate_type(self, transaction_type) -> None:
         if not isinstance(transaction_type, TransactionType):
             raise ValueError(f'{transaction_type} não é um tipo válido!')
@@ -217,12 +229,11 @@ class Transaction():
         if not isinstance(transaction_date, date) or transaction_date > date.today() :
             raise ValueError(f'{transaction_date} não é uma data válida!')
         
-    def _validate_category(self, category, transaction_type) -> None:
-        """Verifica se é uma categoria de receita se a transação for desse tipo, ou se ela é de despesa caso a transação for desse tipo"""
-        if transaction_type == TransactionType.INCOME:
-            if not isinstance(category, IncomeCategory):
+    def _validate_category(self, category: IncomeCategory | ExpenseCategory) -> None:
+        """Verifica se é uma categoria de receita ou se ela é de despesa."""
+        match self._transaction_type:
+            case TransactionType.INCOME if not isinstance(category, IncomeCategory):
                 raise ValueError(f'{category} não é uma categoria de receita válida!')
-        
-        elif transaction_type == TransactionType.EXPENSE:
-            if not isinstance(category, ExpenseCategory):
+            
+            case TransactionType.EXPENSE if not isinstance(category, ExpenseCategory):
                 raise ValueError(f'{category} não é uma categoria de despesa válida!')

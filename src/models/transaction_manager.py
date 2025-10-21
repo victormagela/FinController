@@ -4,18 +4,25 @@ from datetime import date
 
 class TransactionManager:
     """
-    Gerencia uma lista de transações, incluindo operações que ocorrem sobre essa, como adicionar, excluir, filtrar.
+    Gerencia uma lista de transações, incluindo operações que ocorrem sobre essa, 
+    como adicionar, excluir, filtrar.
 
     Atributos privados:
-    _transaction_list (list[Transaction]) = lista que contém todas as transações adicionadas. É iniciada como uma lista vazia.
+    _transaction_list (list[Transaction]) = lista que contém todas as transações adicionadas. 
+    É iniciada como uma lista vazia.
     """
     def __init__(self) -> None:
         self._transaction_list: list[Transaction] = []
 
+    # Métodos básicos de lista ---------------------------------------------------------------------------------------- 
     def add_transaction(self, transaction: Transaction) -> None:
         """Adiciona uma (ou mais) transação nova à lista."""
         self._transaction_list.append(transaction)
 
+    def get_all_transactions(self) -> list[Transaction]:
+        """Retorna uma cópia da lista de todas as transações."""
+        return self._transaction_list.copy()
+    
     def del_transaction(self, *transaction_ids: int) -> None:
         """Exclui uma transação (ou mais) da lista com base no ID dela. Levanta exceção caso não encontrar algum ID."""
         for transaction_id in transaction_ids:
@@ -28,7 +35,19 @@ class TransactionManager:
                     self._transaction_list.remove(transaction)
                     break
     
-    def update_transaction_category(self, transaction_id: int, new_value: IncomeCategory|ExpenseCategory):
+    def get_transaction_by_id(self, transaction_id: int) -> Transaction:
+        for transaction in self._transaction_list:
+            if transaction_id == transaction.id:
+                return transaction
+
+        raise ValueError(f'Não foi possível encontrar uma transação com o id {transaction_id}')
+
+    # Métodos de atualização ------------------------------------------------------------------------------------------    
+    def update_transaction_category(
+            self, 
+            transaction_id: int, 
+            new_value: IncomeCategory | ExpenseCategory | None=None
+            ) -> None:
         """Altera a categoria da transação. Levanta exceção caso não encontrar o ID."""
         for transaction in self._transaction_list:
             if transaction.id == transaction_id:
@@ -46,19 +65,18 @@ class TransactionManager:
                     
         raise ValueError(f'ID {transaction_id} não encontrado!')
     
-    def get_all_transactions(self) -> list[Transaction]:
-        """Retorna uma cópia da lista de todas as transações."""
-        return self._transaction_list.copy()
-    
-    def filter_by_amount_range(self, start: int|float = 0, end: int|float = 1e20):
+    # Métodos de filtragem --------------------------------------------------------------------------------------------
+    def filter_by_amount_range(self, start: int | float=0, end: int | float=1e20):
         """Filtra a lista por um alcance de valor, e retorna uma nova lista com somente as transações neste alcance."""
         return [transaction for transaction in self._transaction_list if start <= transaction.amount <= end]
     
     def filter_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
         """Filtra a lista por tipo de transação, e retorna uma nova lista com somente as transações deste tipo"""
-        return [transaction for transaction in self._transaction_list if transaction.transaction_type == transaction_type]
+        return [
+            transaction for transaction in self._transaction_list if transaction.transaction_type == transaction_type
+            ]
     
-    def filter_by_date_range(self, start: date = None, end: date = None) -> list[Transaction]:
+    def filter_by_date_range(self, start: date=None, end: date=None) -> list[Transaction]:
         """Filtra a lista por período, e retorna uma nova lista com somente as transações feitas neste período"""
         if start is None:
             start = date.min
@@ -68,6 +86,16 @@ class TransactionManager:
 
         return [transaction for transaction in self._transaction_list if start <= transaction.transaction_date <= end]
 
-    def filter_by_category(self, category: IncomeCategory|ExpenseCategory) -> list[Transaction]:
+    def filter_by_category(self, category: IncomeCategory | ExpenseCategory) -> list[Transaction]:
         """Filtra a lista por categoria, e retorna uma nova lista com somente as transações desta categoria"""
         return [transaction for transaction in self._transaction_list if transaction.category == category]
+    
+    # Métodos de ordenação --------------------------------------------------------------------------------------------
+    def sort_by_amount(self, reverse: bool=False) -> list[Transaction]:
+        return sorted(self._transaction_list, key=lambda transaction: transaction.amount, reverse=reverse)
+    
+    def sort_by_date(self, reverse: bool=False) -> list[Transaction]:
+        return sorted(self._transaction_list, key=lambda transaction: transaction.transaction_date, reverse=reverse)
+    
+    def sort_by_id(self, reverse: bool=False) -> list[Transaction]:
+        return sorted(self._transaction_list, key=lambda transaction: transaction.id, reverse=reverse)
