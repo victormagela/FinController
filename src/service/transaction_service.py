@@ -80,6 +80,13 @@ class TransactionService:
     def filter_by_category(self, category: str) -> list[Transaction]:
         
         parsed_category: IncomeCategory | ExpenseCategory = DataParser.to_valid_category(category)
+        """Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
+        da categoria 'outros' de ambos os tipos."""
+        if parsed_category == IncomeCategory.OTHERS or parsed_category == ExpenseCategory.OTHERS:
+            income_others: list[Transaction] = self._manager.filter_by_category(IncomeCategory.OTHERS)
+            expense_others: list[Transaction] = self._manager.filter_by_category(ExpenseCategory.OTHERS)
+            return income_others + expense_others
+        
         return self._manager.filter_by_category(parsed_category)
     
     # Métodos de ordenação --------------------------------------------------------------------------------------------

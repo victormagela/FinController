@@ -87,7 +87,7 @@ class DataParser:
     
     @staticmethod
     def to_valid_category(category_str: str | None=None) -> IncomeCategory | ExpenseCategory | None:
-        category: IncomeCategory|ExpenseCategory|None = None
+        category: IncomeCategory | ExpenseCategory | None = None
         if category_str is not None:
             category_str_normalized: str = category_str.strip().lower()
             if category_str_normalized in IncomeCategory.get_all_values():

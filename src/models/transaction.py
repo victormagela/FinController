@@ -118,6 +118,7 @@ class Transaction():
                 case TransactionType.EXPENSE:
                     self._category: ExpenseCategory = ExpenseCategory.OTHERS
         else:
+            category = self._normalize_others_category_ambiguity(category)
             self._validate_category(category)
             self._category: IncomeCategory | ExpenseCategory = category
         if description is None:
@@ -194,6 +195,7 @@ class Transaction():
             else ExpenseCategory.OTHERS
         
         else:
+            new_category = self._normalize_others_category_ambiguity(new_category)
             self._validate_category(new_category)
         
         self._category = new_category
@@ -237,3 +239,30 @@ class Transaction():
             
             case TransactionType.EXPENSE if not isinstance(category, ExpenseCategory):
                 raise ValueError(f'{category} não é uma categoria de despesa válida!')
+            
+    # Método para detectar e corrigir ambiguidade das categorias 'outros' ---------------------------------------------
+    def _normalize_others_category_ambiguity(
+            self, 
+            category: IncomeCategory | ExpenseCategory
+            ) -> IncomeCategory | ExpenseCategory:
+        """
+        Normaliza categoria OTHERS para o tipo correto se necessário.
+    
+        Se a categoria for OTHERS mas do tipo incompatível com transaction_type,
+        retorna a versão correta de OTHERS. Caso contrário, retorna a 
+        categoria original inalterada.
+    
+        Args:
+        category: A categoria a ser normalizada
+        
+        Returns:
+        A categoria normalizada (corrigida se necessário)
+        """
+        if self._transaction_type == TransactionType.INCOME and category == ExpenseCategory.OTHERS:
+            return IncomeCategory.OTHERS
+
+        if self._transaction_type == TransactionType.EXPENSE and category == IncomeCategory.OTHERS:
+            return ExpenseCategory.OTHERS
+        
+        return category
+    
