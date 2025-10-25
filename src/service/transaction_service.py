@@ -64,9 +64,9 @@ class TransactionService:
     def filter_by_date_range(self, start_date: str=None, end_date: str=None) -> list[Transaction]:
         DATE_FORMAT = "%d/%m/%Y"
         
-        # Inicializa as datas convertidas como None. Se o usuário não fornecer uma data,
-        # None será passado para o manager, que interpretará como "sem limite"
-        # (usando date.min ou date.max conforme apropriado)
+        """"Inicializa as datas convertidas como None. Se o usuário não fornecer uma data,
+        None será passado para o manager, que interpretará como "sem limite"
+        (usando date.min ou date.max conforme apropriado)"""
         parsed_start_date: date | None = None
         parsed_end_date: date | None = None
         if start_date:
@@ -81,7 +81,7 @@ class TransactionService:
         
         parsed_category: IncomeCategory | ExpenseCategory = DataParser.to_valid_category(category)
         """Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
-        da categoria 'outros' de ambos os tipos."""
+        da dessa categoria de ambos os tipos."""
         if parsed_category == IncomeCategory.OTHERS or parsed_category == ExpenseCategory.OTHERS:
             income_others: list[Transaction] = self._manager.filter_by_category(IncomeCategory.OTHERS)
             expense_others: list[Transaction] = self._manager.filter_by_category(ExpenseCategory.OTHERS)
