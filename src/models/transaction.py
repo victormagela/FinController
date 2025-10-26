@@ -92,11 +92,13 @@ class Transaction():
     _transaction_type (TransactionType): tipo da transação (receita ou despesa).
     _transaction_date (datetime.date): data que foi feita a transação (não aceita datas futuras).
     _category (str): atributo opcional, define a categoria da transação (máximo de 50 caracteres e mínimo de 3).
-    _description (str): atributo opcional, adiciona uma descrição mais longa da transação (máximo de 200 caracteres e mínimo de 3).
+    _description (str): atributo opcional, adiciona uma descrição mais longa da transação (máximo de 200 caracteres 
+    e mínimo de 3).
 
     Exemplos:
-    Transaction(10.50, TransactionType.INCOME, datetime.date(2025, 10, 14))
-    Transaction(45, TransactionType.EXPENSE, datetime.date(2025, 09, 20), 'Alimentação', 'Saí para almoçar fora de casa')
+    Transaction(10.50, TransactionType.INCOME, date(2025, 10, 14))
+    Transaction(45, TransactionType.EXPENSE, date(2025, 09, 20), 'alimentação', 
+    'Saí para almoçar fora de casa')
     """
     _transaction_counter: int = 0 # Contador de instâncias
 
@@ -125,7 +127,8 @@ class Transaction():
             self._description: str = 'Descrição não adicionada'
         else:
             self._description: str = description
-        # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. Garante que cada instância terá um ID único.
+        # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. 
+        # Garante que cada instância terá um ID único.
         Transaction._transaction_counter += 1
         self._id: int = Transaction._transaction_counter 
 
@@ -185,7 +188,7 @@ class Transaction():
         return datetime.strftime(self._transaction_date, '%d/%m/%Y')
 
     @property
-    def category(self) -> str:
+    def category(self) -> IncomeCategory | ExpenseCategory:
         return self._category
     
     @category.setter
@@ -201,14 +204,19 @@ class Transaction():
         self._category = new_category
 
     @property
+    def category_str(self) -> str:
+        """Retorna a categoria da transação em formato mais legível."""
+        return str(self._category.value).capitalize()
+
+    @property
     def description(self) -> str:
         return self._description
     
     @description.setter
     def description(self, description: str) -> None:
-        if not isinstance(description, str) or 3 > len(description) or len(description) > 200:
+        if not isinstance(description, str) or 3 > len(description) or len(description) > 140:
             raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres' \
-            ' e no máximo 200 caracteres')
+            ' e no máximo 140 caracteres')
         
         self._description = description
 
@@ -266,3 +274,7 @@ class Transaction():
         
         return category
     
+
+if __name__ == '__main__':
+    t1 = Transaction(10.50, TransactionType.INCOME, date(2025, 10, 14))
+    print(t1.__dict__)

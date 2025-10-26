@@ -40,7 +40,7 @@ class TransactionManager:
             if transaction_id == transaction.id:
                 return transaction
 
-        raise ValueError(f'Não foi possível encontrar uma transação com o id {transaction_id}')
+        raise ValueError(f'Não foi possível encontrar uma transação com o id {transaction_id}!')
 
     # Métodos de atualização ------------------------------------------------------------------------------------------    
     def update_transaction_category(

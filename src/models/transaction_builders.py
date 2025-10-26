@@ -60,7 +60,7 @@ class DataParser:
             
             amount = float(amount_str_normalized)
         except ValueError:
-            raise ValueError(f'{amount_str} não é um valor válido.')
+            raise ValueError(f'{amount_str} não é um valor válido!')
 
         return amount
     
@@ -70,7 +70,7 @@ class DataParser:
             transaction_type_str_normalized = transaction_type_str.strip().lower()
             transaction_type = TransactionType(transaction_type_str_normalized)
         except ValueError:
-            raise ValueError(f'{transaction_type_str} não é um tipo válido.'
+            raise ValueError(f'{transaction_type_str} não é um tipo válido!'
                               'Só deve ser aceito "receita" ou "despesa".')
         
         return transaction_type
@@ -81,7 +81,7 @@ class DataParser:
             transaction_date_str_normalized = transaction_date_str.strip()
             transaction_date = datetime.strptime(transaction_date_str_normalized, date_format).date()
         except ValueError:
-            raise ValueError(f'{transaction_date_str} não é uma data válida. Siga o formato DD/MM/AAAA')
+            raise ValueError(f'{transaction_date_str} não é uma data válida! Siga o formato DD/MM/AAAA.')
         
         return transaction_date
     
@@ -97,7 +97,7 @@ class DataParser:
                 category = ExpenseCategory(category_str_normalized)
 
             else:
-                raise ValueError(f'{category_str} não é uma categoria válida.')
+                raise ValueError(f'{category_str} não é uma categoria válida!')
                 
         return category
     
@@ -118,7 +118,7 @@ class DataParser:
             case 'crescente':
                 return False
             case _:
-                raise ValueError(f'Não reconheço {order}.')
+                raise ValueError(f'Não reconheço {order}!')
 
 class TransactionFactory:
     """Construtor alternativo"""

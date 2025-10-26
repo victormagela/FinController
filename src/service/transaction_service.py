@@ -26,9 +26,7 @@ class TransactionService:
         return transaction
     
     def get_all_transactions(self) -> list[Transaction]:
-        transaction_list: list[Transaction] = self._manager.get_all_transactions()
-
-        return transaction_list
+        return self._manager.get_all_transactions()
     
     def del_transaction(self, *transaction_ids: int) -> None:
         self._manager.del_transaction(*transaction_ids)

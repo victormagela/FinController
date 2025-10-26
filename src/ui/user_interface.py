@@ -4,10 +4,12 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.rule import Rule
 from rich import box
+from rich.table import Table
 
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR
 from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, TRANSACTION_TYPE_TABLE
+from src.models.transaction import Transaction
 
 
 class MenuBuilder:
@@ -17,7 +19,7 @@ class MenuBuilder:
         menu_lines = []
 
         for index, transaction_type in TRANSACTION_TYPE_TABLE.items():
-            menu_lines.append(f'[cyan]{index}[/] {transaction_type.capitalize()}')
+            menu_lines.append(f'[cyan][{index}][/] {transaction_type.capitalize()}')
             
         transaction_type_menu_text: str = '\n'.join(menu_lines)
 
@@ -79,6 +81,33 @@ class MenuBuilder:
         return choices
     
 
+class GraphTableBuilder:
+    @staticmethod
+    def build_transaction_table(transactions_list: list[Transaction]) -> Table:
+        transaction_table = Table(
+            '[cyan]ID[/]', 
+            '[cyan]Tipo[/]', 
+            '[cyan]Valor[/]',
+            '[cyan]Data[/]',  
+            '[cyan]Categoria[/]', 
+            '[cyan]Descrição[/]', 
+            title='Transações', 
+            style='bold blue'
+            )
+        
+        for transaction in transactions_list:
+            transaction_table.add_row(
+                str(transaction.id), 
+                transaction.transaction_type_str, 
+                transaction.amount_formatted_brazil, 
+                transaction.transaction_date_str, 
+                transaction.category_str, 
+                transaction.description, 
+                style='green' if transaction.transaction_type_str == 'Receita' else 'red')
+
+        return transaction_table
+    
+
 class UserInterface:
     """Interface CLI do Programa"""
     # Padrões regex para validação de dados
@@ -114,8 +143,12 @@ class UserInterface:
         return option
     
     def add_transaction(self) -> None:
-        raw_data_dict = self.collect_transaction_info()
-        self._service.add_transaction(raw_data_dict)
+        try:
+            raw_data_dict = self.collect_transaction_info()
+            self._service.add_transaction(raw_data_dict)
+        except ValueError as e:
+            self._console.print('\n')
+            self._console.print(f'[red]{e}[/]')
     
     def collect_transaction_info(self) -> dict[str, str]:
         """
@@ -125,6 +158,7 @@ class UserInterface:
         raw_transaction_data_dict: dict[str, str] = {}
 
         self._console.clear()
+        self._console.print('\n')
         self._console.print(Rule('[bold blue]Nova Transação[/]', style='cyan'))
         self._console.print('\n')
 
@@ -146,6 +180,22 @@ class UserInterface:
             raw_transaction_data_dict['description'] = description
 
         return raw_transaction_data_dict
+    
+    def show_all_transactions(self) -> None:
+        """Coleta a lista de todas as transações por meio de TransactionService e as mostra no terminal"""
+        transaction_list: list[Transaction] = self._service.get_all_transactions()
+
+        if not transaction_list:
+            self._console.print('\n')
+            self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
+            return
+
+        transaction_table: Table = GraphTableBuilder.build_transaction_table(transaction_list)
+
+        self._console.print('\n')
+        self._console.print(Rule('[bold blue]Lista de Transações[/]', style='cyan'))
+        self._console.print('\n')        
+        self._console.print(transaction_table)
 
     # Métodos de coleta de dados individuais --------------------------------------------------------------------------
     def _collect_amount(self) -> str:
@@ -243,6 +293,7 @@ Exemplo: 01/01/2025[/]"""
         self._console.print('\n')
         self._console.print(description_panel)
         description = self._console.input('Digite uma descrição para a transação: ')
+        self._console.print('\n')
 
         return description if description else None
 
