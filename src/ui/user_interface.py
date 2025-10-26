@@ -12,8 +12,26 @@ from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, T
 from src.models.transaction import Transaction
 
 
-class MenuBuilder:
-    """Constrói Menus de forma dinâmica para a interface CLI"""
+class PanelBuilder:
+    """Constrói Menus e Painéis para a interface CLI"""
+    @staticmethod
+    def build_main_menu() -> Panel:
+        menu_text: str = """[cyan][1][/cyan] Adicionar Transação
+[cyan][2][/cyan] Listar Transações
+[cyan][3][/cyan] Excluir Transação
+[cyan][4][/cyan] Alterar Transação
+[cyan][5][/cyan] Filtrar Transações
+[cyan][6][/cyan] Ordenar Transações
+[cyan][0][/cyan] Sair"""
+
+        main_menu = Panel(
+            menu_text,
+            title='[bold blue]Menu Principal[/bold blue]',
+            border_style='cyan',
+            padding=(1,4),
+            expand=False,
+            )
+
     @staticmethod
     def build_transaction_type_menu() -> Panel:
         menu_lines = []
@@ -23,7 +41,7 @@ class MenuBuilder:
             
         transaction_type_menu_text: str = '\n'.join(menu_lines)
 
-        transaction_type_panel = Panel(
+        transaction_type_menu = Panel(
             transaction_type_menu_text,
             title='[bold blue]Tipos de Transação[/]',
             expand=False,
@@ -31,7 +49,7 @@ class MenuBuilder:
             padding=(1,4)
             )
             
-        return transaction_type_panel
+        return transaction_type_menu
         
     @staticmethod
     def build_category_menu(transaction_type: str) -> Panel:
@@ -52,7 +70,7 @@ class MenuBuilder:
         menu_lines.append('[cyan][0][/] Definir mais tarde')
         category_menu_text: str = '\n'.join(menu_lines)
 
-        category_menu_panel = Panel(
+        category_menu = Panel(
             category_menu_text,
             title=panel_title,
             expand=False,
@@ -60,9 +78,13 @@ class MenuBuilder:
             padding=(1,4)
             )
             
-        return category_menu_panel
+        return category_menu
         
-    # Métodos que retornam uma lista de opções para o Prompt de Rich ----------------------------------------------
+    # Métodos que retornam uma lista de opções para o Prompt de Rich --------------------------------------------------
+    @staticmethod
+    def get_main_menu_choices() -> list[str]:
+        return ['1', '2', '3', '4', '5', '6', '0']
+
     @staticmethod
     def get_transaction_type_choices() -> list[str]:
         return [number for number in TRANSACTION_TYPE_TABLE]
@@ -110,7 +132,7 @@ class GraphTableBuilder:
 
 class UserInterface:
     """Interface CLI do Programa"""
-    # Padrões regex para validação de dados
+    # Padrões regex para validação de formato de dados
     AMOUNT_PATTERN: str = r'^\d+([.,]\d{1,2})?$'
     DATE_PATTERN: str = r'^\d{2}/\d{2}/\d{4}$'
 
@@ -119,27 +141,14 @@ class UserInterface:
         self._console: Console = Console()
 
     def show_main_menu(self):
-        menu_text: str = """[cyan][1][/cyan] Adicionar Transação
-[cyan][2][/cyan] Listar Transações
-[cyan][3][/cyan] Excluir Transação
-[cyan][4][/cyan] Alterar Transação
-[cyan][5][/cyan] Filtrar Transações
-[cyan][6][/cyan] Ordenar Transações
-[cyan][0][/cyan] Sair"""
-
-        panel = Panel(
-            menu_text,
-            title='[bold blue]Menu Principal[/bold blue]',
-            border_style='cyan',
-            padding=(1,4),
-            expand=False,
-            )
+        main_menu = PanelBuilder.build_main_menu()
+        main_menu_choices = PanelBuilder.get_main_menu_choices()
         
         self._console.print('\n')
-        self._console.print(panel, justify='center')
+        self._console.print(main_menu, justify='center')
         option: str = PromptPTBR.ask(
             'Digite o número da opção desejada', 
-            choices=['1', '2', '3', '4', '5', '6', '0'], )
+            choices=main_menu_choices)
         return option
     
     def add_transaction(self) -> None:
@@ -216,8 +225,8 @@ class UserInterface:
             return amount_str
 
     def _collect_transaction_type(self) -> str:
-        transaction_type_panel: Panel = MenuBuilder.build_transaction_type_menu()
-        transaction_type_choices: list[str] = MenuBuilder.get_transaction_type_choices()
+        transaction_type_panel: Panel = PanelBuilder.build_transaction_type_menu()
+        transaction_type_choices: list[str] = PanelBuilder.get_transaction_type_choices()
 
         self._console.print(Rule('\n[bold blue]Tipo da Transação[/]', style='cyan', characters='.'))
         self._console.print('\n')
@@ -259,8 +268,8 @@ Exemplo: 01/01/2025[/]"""
     def _collect_category(self, transaction_type_str: str) -> str | None:
         self._console.print(Rule('\n[bold blue]Categoria da Transação[/]', style='cyan', characters='.'))
 
-        category_panel : Panel = MenuBuilder.build_category_menu(transaction_type_str)
-        category_choices: str = MenuBuilder.get_category_choices(transaction_type_str)
+        category_panel : Panel = PanelBuilder.build_category_menu(transaction_type_str)
+        category_choices: str = PanelBuilder.get_category_choices(transaction_type_str)
                 
         self._console.print('\n')
         self._console.print(category_panel, justify='center')
