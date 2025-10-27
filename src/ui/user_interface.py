@@ -8,7 +8,7 @@ from rich import box
 from rich.table import Table
 
 from src.service.transaction_service import TransactionService
-from src.utils.utils import PromptPTBR
+from src.utils.utils import PromptPTBR, IntPromptPTBR
 from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, TRANSACTION_TYPE_TABLE
 from src.models.transaction import Transaction
 
@@ -388,7 +388,8 @@ class UserInterface:
             if option == '0':
                 return
 
-            transaction_id: int = int(self._console.input('Digite o índice da transação que deseja alterar: '))
+            self._console.print('\n')
+            transaction_id: int = IntPromptPTBR.ask('Digite o índice da transação')
             try:
                 self._service.get_transaction_by_id(transaction_id)
             except ValueError as e:
@@ -396,13 +397,22 @@ class UserInterface:
                 return
             
             if option == '1':
-                self._del_transaction(transaction_id)
+                try:
+                    self._del_transaction(transaction_id)
+                except ValueError as e:
+                    self._console.print(f'{e}')
             
             elif option == '2':
-                self._update_category(transaction_id)
+                try:
+                    self._update_category(transaction_id)
+                except ValueError as e:
+                    self._console.print(f'{e}')
 
-            elif option == '3':
-                self._update_description(transaction_id)
+            else:
+                try:
+                    self._update_description(transaction_id)
+                except ValueError as e:
+                    self._console.print(f'{e}')
 
     def _filter_transactions(self):
         ...
