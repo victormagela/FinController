@@ -28,8 +28,19 @@ class TransactionService:
     def get_all_transactions(self) -> list[Transaction]:
         return self._manager.get_all_transactions()
     
-    def del_transaction(self, *transaction_ids: int) -> None:
-        self._manager.del_transaction(*transaction_ids)
+    def del_transaction(self, transaction_id: str) -> None:
+        self._manager.del_transaction(transaction_id)
+
+    def get_transaction_by_id(self, transaction_id: str):
+        transaction_id: int = int(transaction_id)
+
+        self._manager.get_transaction_by_id(transaction_id)
+
+    def get_transaction_type(self, transaction_id: str) -> Transaction:
+        transaction_id = int(transaction_id)
+
+        transaction = self._manager.get_transaction_by_id(transaction_id)
+        return transaction.transaction_type.value
 
     # Métodos de atualização ------------------------------------------------------------------------------------------
     def update_transaction_category(self, transaction_id: int, new_value: str):

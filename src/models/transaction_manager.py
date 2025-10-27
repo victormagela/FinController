@@ -23,17 +23,16 @@ class TransactionManager:
         """Retorna uma cópia da lista de todas as transações."""
         return self._transaction_list.copy()
     
-    def del_transaction(self, *transaction_ids: int) -> None:
+    def del_transaction(self, transaction_id: int) -> None:
         """Exclui uma transação (ou mais) da lista com base no ID dela. Levanta exceção caso não encontrar algum ID."""
-        for transaction_id in transaction_ids:
+        for transaction in self._transaction_list:
             if not any(transaction.id == transaction_id for transaction in self._transaction_list):
                 raise ValueError(f'ID {transaction_id} não encontrado!')
 
-        for transaction_id in transaction_ids:
-            for transaction in self._transaction_list:
-                if transaction.id == transaction_id:
-                    self._transaction_list.remove(transaction)
-                    break
+        for transaction in self._transaction_list:
+            if transaction.id == transaction_id:
+                self._transaction_list.remove(transaction)
+                break
     
     def get_transaction_by_id(self, transaction_id: int) -> Transaction:
         for transaction in self._transaction_list:

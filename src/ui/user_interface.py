@@ -84,7 +84,7 @@ class PanelBuilder:
         submenu_text = """[cyan][1][/]: Modificar Transação
 [cyan][2][/]: Filtrar Transações
 [cyan][3][/]: Ordenar Transações
-[cyan][0][/]: Sair"""
+[cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Gerenciamento[/]'
 
         submenu_panel = Panel(
@@ -98,9 +98,9 @@ class PanelBuilder:
     
     @staticmethod
     def build_transaction_modification_submenu() -> Panel:
-        submenu_text = """[cyan][1][/]: Alterar Categoria
-[cyan][2][/]: Alterar Descrição
-[cyan][3][/]: Excluir Transação
+        submenu_text = """[cyan][1][/]: Excluir Transação
+[cyan][2][/]: Alterar Categoria
+[cyan][3][/]: Alterar Descrição
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Modificação[/]'
 
@@ -249,23 +249,21 @@ class UserInterface:
     def __init__(self):
         self._service: TransactionService = TransactionService()
         self._console: Console = Console()
-    # Dicionários para o padrão Dispatch Table em menus
-        self.main_menu_dispatch_table: dict[str, Callable] = {
-        '1': self.add_transaction,
-        '2': self.manage_transactions,
-    }
         
     def run(self) -> None:
         while True:
-            option: str = self.collect_main_menu_choice()
+            option: str = self._collect_main_menu_choice()
             if option == '0':
                 self._console.print('Obrigado por usar o FinController!', style='green')
                 break
 
-            command: Callable = self.main_menu_dispatch_table.get(option)
-            command()
+            elif option == '1':
+                self._add_transaction()
 
-    def collect_main_menu_choice(self) -> str:
+            elif option == '2':
+                self._manage_transactions()
+
+    def _collect_main_menu_choice(self) -> str:
         main_menu = PanelBuilder.build_main_menu()
         main_menu_choices = PanelBuilder.get_main_menu_choices()
         
@@ -276,9 +274,9 @@ class UserInterface:
             choices=main_menu_choices)
         return option
     
-    def add_transaction(self) -> None:
+    def _add_transaction(self) -> None:
         try:
-            raw_data_dict = self.collect_transaction_info()
+            raw_data_dict = self._collect_transaction_info()
             self._service.add_transaction(raw_data_dict)
 
             confirmation_msg = 'Transação adicionada com sucesso!'
@@ -288,7 +286,7 @@ class UserInterface:
             self._console.print('\n')
             self._console.print(f'[red]{e}[/]')
     
-    def collect_transaction_info(self) -> dict[str, str]:
+    def _collect_transaction_info(self) -> dict[str, str]:
         """
         Método que chama os métodos de coleta individuais
         e os adiciona a um dicionário para ser usado pela camada de serviço
@@ -300,46 +298,67 @@ class UserInterface:
         self._console.print(Rule('[bold blue]Nova Transação[/]', style='cyan'))
         self._console.print('\n')
 
+        self._console.print(Rule('[bold blue]Valor da Transação[/]', style='cyan', characters='.'))
         amount: str = self._collect_amount()
         raw_transaction_data_dict['amount'] = amount
         
+        self._console.print(Rule('\n[bold blue]Tipo da Transação[/]', style='cyan', characters='.'))
         transaction_type: str = self._collect_transaction_type()
         raw_transaction_data_dict['transaction_type'] = transaction_type
 
+        self._console.print(Rule('\n[bold blue]Data da Transação[/]', style='cyan', characters='.'))
         transaction_date: str = self._collect_transaction_date()
         raw_transaction_data_dict['transaction_date'] = transaction_date
 
+        self._console.print(Rule('\n[bold blue]Categoria da Transação[/]', style='cyan', characters='.'))
         category: str | None = self._collect_category(transaction_type)
         if category:
             raw_transaction_data_dict['category'] = category
 
+        self._console.print(Rule('\n[bold blue]Descrição da Transação[/]', style='cyan', characters='.'))
         description: str | None = self._collect_description()
         if description:
             raw_transaction_data_dict['description'] = description
 
         return raw_transaction_data_dict
     
-    def manage_transactions(self) ->None:
-        transaction_list = self._service.get_all_transactions()
-        if not transaction_list:
+    def _manage_transactions(self) ->None:
+        """
+        Método que pega a lista de transações do _service e as mostra, 
+        juntamente de um submenu com opções de gerenciamento.
+        """
+        while True:
+            transaction_list = self._service.get_all_transactions()
+            if not transaction_list:
+                self._console.print('\n')
+                self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
+                return
+            
+            self._show_all_transactions(transaction_list)
+
+            transaction_management_submenu = PanelBuilder.build_transaction_management_submenu()
+            transaction_management_choices = PanelBuilder.get_transaction_management_submenu_choices()
+
             self._console.print('\n')
-            self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
-            return
-        
-        self.show_all_transactions(transaction_list)
+            self._console.print(transaction_management_submenu, justify='center')
+            option = PromptPTBR.ask(
+                'Digite o número da opção desejada',
+                choices= transaction_management_choices
+                )
+            if option == '0':
+                return
 
-        transaction_management_submenu = PanelBuilder.build_transaction_management_submenu()
-        transaction_management_choices = PanelBuilder.get_transaction_management_submenu_choices()
+            if option == '1':
+                self._modify_transaction()
 
-        self._console.print('\n')
-        self._console.print(transaction_management_submenu, justify='center')
-        option = PromptPTBR.ask(
-            'Digite o número da opção desejada',
-            choices= transaction_management_choices
-            )
+            elif option == '2':
+                self._filter_transactions()
+            
+            else:
+                self._sort_transactions()
     
-    def show_all_transactions(self, transaction_list) -> list[Transaction]:
-        """Mostra a lista de todas as transações e as mostra no terminal"""
+    def _show_all_transactions(self, transaction_list) -> list[Transaction]:
+        """Mostra a lista de todas as transações no terminal"""
         transaction_table: Table = GraphTableBuilder.build_transaction_table(transaction_list)
 
         self._console.clear()
@@ -348,12 +367,66 @@ class UserInterface:
         self._console.print(transaction_table)
 
         return transaction_list
+    
+    def _modify_transaction(self):
+        """Apresenta um menu de possíveis modificações, captura a escolha do usuário e a executa"""
+        transaction_modification_submenu = PanelBuilder.build_transaction_modification_submenu()
+        transaction_modification_choices = PanelBuilder.get_transaction_modification_submenu_choices()
+
+        while True:
+            transaction_list = self._service.get_all_transactions()
+            if not transaction_list:
+                return
+            self._console.print('\n')
+            self._show_all_transactions(transaction_list)
+            self._console.print('\n')
+            self._console.print(transaction_modification_submenu, justify='center')
+            option = PromptPTBR.ask(
+                'Digite o número da opção desejada',
+                choices= transaction_modification_choices
+                )
+            if option == '0':
+                return
+
+            transaction_id: int = int(self._console.input('Digite o índice da transação que deseja alterar: '))
+            try:
+                self._service.get_transaction_by_id(transaction_id)
+            except ValueError as e:
+                self._console.print(f'[red]{e}[/]')
+                return
+            
+            if option == '1':
+                self._del_transaction(transaction_id)
+            
+            elif option == '2':
+                self._update_category(transaction_id)
+
+            elif option == '3':
+                self._update_description(transaction_id)
+
+    def _filter_transactions(self):
+        ...
+
+    def _sort_transactions(self):
+        ...
+
+    # Métodos para atualizar dados individuais (categoria ou descrição) ou excluir uma transação da lista
+    def _del_transaction(self, transaction_id: int) -> None:
+        self._service.del_transaction(transaction_id)
+
+    def _update_category(self, transaction_id: int) -> None:
+        transaction_type = self._service.get_transaction_type(transaction_id)
+
+        new_category = self._collect_category(transaction_type)
+        self._service.update_transaction_category(transaction_id, new_category)
+
+    def _update_description(self, transaction_id: int) -> None:
+        new_description = self._collect_description()
+        self._service.update_transaction_description(transaction_id, new_description)
 
     # Métodos de coleta de dados individuais --------------------------------------------------------------------------
     def _collect_amount(self) -> str:
-        self._console.print(Rule('[bold blue]Valor da Transação[/]', style='cyan', characters='.'))
         self._console.print('\n')
-
         while True:
             amount_str : str = self._console.input('Digite o valor da transação: ').strip()
             if not amount_str:
@@ -371,7 +444,6 @@ class UserInterface:
         transaction_type_panel: Panel = PanelBuilder.build_transaction_type_menu()
         transaction_type_choices: list[str] = PanelBuilder.get_transaction_type_choices()
 
-        self._console.print(Rule('\n[bold blue]Tipo da Transação[/]', style='cyan', characters='.'))
         self._console.print('\n')
         self._console.print(transaction_type_panel, justify='center')
         transaction_type_option: str = PromptPTBR.ask(
@@ -386,8 +458,7 @@ class UserInterface:
 Exemplo: 01/01/2025[/]"""
 
         date_format_panel = PanelBuilder.build_orientation_panel(DATE_FORMAT)
-        
-        self._console.print(Rule('\n[bold blue]Data da Transação[/]', style='cyan', characters='.'))
+
         self._console.print('\n')
         self._console.print(date_format_panel)
         while True:
@@ -403,8 +474,6 @@ Exemplo: 01/01/2025[/]"""
             return date_str
         
     def _collect_category(self, transaction_type_str: str) -> str | None:
-        self._console.print(Rule('\n[bold blue]Categoria da Transação[/]', style='cyan', characters='.'))
-
         category_panel : Panel = PanelBuilder.build_category_menu(transaction_type_str)
         category_choices: str = PanelBuilder.get_category_choices(transaction_type_str)
                 
@@ -429,7 +498,6 @@ Exemplo: 01/01/2025[/]"""
 
         description_panel = PanelBuilder.build_orientation_panel(description_note)
 
-        self._console.print(Rule('\n[bold blue]Descrição da Transação[/]', style='cyan', characters='.'))
         self._console.print('\n')
         self._console.print(description_panel)
         description = self._console.input('Digite uma descrição para a transação: ')
