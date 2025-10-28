@@ -12,6 +12,7 @@ from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
 from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, TRANSACTION_TYPE_TABLE
 from src.models.transaction import Transaction
+from src.ui.ui_state_manager import UIStateManager
 
 
 class PanelBuilder:
@@ -270,6 +271,7 @@ class UserInterface:
     def __init__(self):
         self._service: TransactionService = TransactionService()
         self._console: Console = Console()
+        self.state_manager: UIStateManager = UIStateManager()
         # Dicionários para execução dos comandos com o padrão Dispatch Table
         self._main_menu_dispatch_table: dict[str, Callable] = {
             '1': self._add_transaction,
@@ -371,7 +373,12 @@ class UserInterface:
         """
         while True:
             self._clear_screen()
-            transaction_list = self._service.get_all_transactions()
+            if self.state_manager.has_active_filter():
+                transaction_list = self.state_manager.filtered_list
+            
+            else:
+                transaction_list = self._service.get_all_transactions()
+                
             if not transaction_list:
                 self._console.print('\n')
                 self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
@@ -379,7 +386,6 @@ class UserInterface:
                 return
             
             self._show_all_transactions(transaction_list)
-
             transaction_management_submenu = PanelBuilder.build_transaction_management_submenu()
             transaction_management_choices = PanelBuilder.get_transaction_management_submenu_choices()
 
@@ -390,10 +396,13 @@ class UserInterface:
                 choices= transaction_management_choices
                 )
             if option == '0':
-                return
+                break
 
             command: Callable = self._transaction_management_submenu_dispatch_table.get(option)
             command()
+        
+        if self.state_manager.has_active_filter():
+            self.state_manager.clear_filtered_list()
     
     def _show_all_transactions(self, transaction_list) -> list[Transaction]:
         """Mostra a lista de todas as transações no terminal"""
@@ -405,14 +414,19 @@ class UserInterface:
 
         return transaction_list
     
-    def _modify_transaction(self):
+    def _modify_transaction(self) -> None:
         """Apresenta um menu de possíveis modificações, captura a escolha do usuário e a executa"""
         transaction_modification_submenu = PanelBuilder.build_transaction_modification_submenu()
         transaction_modification_choices = PanelBuilder.get_transaction_modification_submenu_choices()
 
         while True:
             self._clear_screen()
-            transaction_list = self._service.get_all_transactions()
+            if self.state_manager.has_active_filter():
+                transaction_list = self.state_manager.filtered_list
+            
+            else:
+                transaction_list = self._service.get_all_transactions()
+            
             if not transaction_list:
                 return
 
@@ -446,14 +460,19 @@ class UserInterface:
                 self._console.print(f'{e}')
                 self._pause_and_clear()
 
-    def _filter_transactions(self):
+    def _filter_transactions(self) -> None:
         """Exibe um menu com todas as opções de filtragem, captura a escolha do usuário e a executa"""
         transaction_filter_submenu = PanelBuilder.build_transaction_filter_submenu()
         transaction_filter_choices = PanelBuilder.get_transaction_filter_submenu_choices()
 
         while True:
             self._clear_screen()
-            transaction_list = self._service.get_all_transactions()
+            if self.state_manager.has_active_filter():
+                transaction_list = self.state_manager.filtered_list
+            
+            else:
+                transaction_list = self._service.get_all_transactions()
+                
             if not transaction_list:
                 return
             
@@ -470,23 +489,34 @@ class UserInterface:
             try:
                 command = self.transaction_filter_submenu_dispatch_table.get(option)
                 filtered_list = command()
-                self._show_all_transactions(filtered_list)
+                self.state_manager.set_filtered_list(filtered_list)
             except ValueError as e:
                 self._console.print(f'[red]{e}[/]')
                 self._pause_and_clear()    
 
-    def _sort_transactions(self):
+    def _sort_transactions(self) -> None:
         ...
 
     # Métodos para atualizar dados individuais (categoria ou descrição) ou excluir uma transação da lista -------------
     def _del_transaction(self, transaction_id: int) -> None:
         self._service.del_transaction(transaction_id)
 
+        if self.state_manager.has_active_filter():
+            self.state_manager.del_from_filtered_list(transaction_id)
+
     def _update_category(self, transaction_id: int) -> None:
+        orientation_msg = 'Nota: Alterar a categoria de uma transação' \
+        ' irá resetar o filtro de transações se houver um ativo.'
+        orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
+
+        self._console.print(orientation_panel)
         transaction_type = self._service.get_transaction_type(transaction_id)
 
         new_category = self._collect_category(transaction_type)
         self._service.update_transaction_category(transaction_id, new_category)
+        
+        if self.state_manager.has_active_filter():
+            self.state_manager.clear_filtered_list()
 
     def _update_description(self, transaction_id: int) -> None:
         new_description = self._collect_description()

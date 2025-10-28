@@ -10,10 +10,10 @@ Projeto pessoal com dupla finalidade:
 
 ## Funcionalidades Planejadas (MVP)
 
-- [ ] Adicionar transações (receitas e despesas)
+- [x] Adicionar transações (receitas e despesas)
 - [ ] Salvar transações em arquivo
 - [ ] Gerar relatório com saldo total
-- [ ] Listar todas as transações
+- [x] Listar todas as transações
 
 ## Tecnologias
 
