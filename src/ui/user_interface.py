@@ -249,6 +249,20 @@ class UserInterface:
     def __init__(self):
         self._service: TransactionService = TransactionService()
         self._console: Console = Console()
+        self._main_menu_dispatch_table: dict[str, Callable] = {
+            '1': self._add_transaction,
+            '2': self._manage_transactions
+        }
+        self._transaction_management_submenu_dispatch_table: dict[str, Callable[[], None]] = {
+            '1': self._modify_transaction,
+            '2': self._filter_transactions,
+            '3': self._sort_transactions
+        }
+        self._transaction_modification_submenu_dispatch_table: dict[str, Callable[[int], None]] = {
+            '1': self._del_transaction,
+            '2': self._update_category,
+            '3': self._update_description
+        }
         
     def run(self) -> None:
         while True:
@@ -257,17 +271,15 @@ class UserInterface:
                 self._console.print('Obrigado por usar o FinController!', style='green')
                 break
 
-            elif option == '1':
-                self._add_transaction()
-
-            elif option == '2':
-                self._manage_transactions()
+            command: Callable = self._main_menu_dispatch_table.get(option)
+            command()
 
     def _collect_main_menu_choice(self) -> str:
         main_menu = PanelBuilder.build_main_menu()
         main_menu_choices = PanelBuilder.get_main_menu_choices()
         
         self._console.print('\n')
+        self._clear_screen()
         self._console.print(main_menu, justify='center')
         option: str = PromptPTBR.ask(
             'Digite o número da opção desejada', 
@@ -282,9 +294,11 @@ class UserInterface:
             confirmation_msg = 'Transação adicionada com sucesso!'
             confirmation_panel = PanelBuilder.build_confirmation_panel(confirmation_msg)
             self._console.print(confirmation_panel, justify='center')
+            self._pause_and_clear()
         except ValueError as e:
             self._console.print('\n')
             self._console.print(f'[red]{e}[/]')
+            self._pause_and_clear()
     
     def _collect_transaction_info(self) -> dict[str, str]:
         """
@@ -293,7 +307,7 @@ class UserInterface:
         """
         raw_transaction_data_dict: dict[str, str] = {}
 
-        self._console.clear()
+        self._clear_screen()
         self._console.print('\n')
         self._console.print(Rule('[bold blue]Nova Transação[/]', style='cyan'))
         self._console.print('\n')
@@ -328,10 +342,12 @@ class UserInterface:
         juntamente de um submenu com opções de gerenciamento.
         """
         while True:
+            self._clear_screen()
             transaction_list = self._service.get_all_transactions()
             if not transaction_list:
                 self._console.print('\n')
                 self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
+                self._pause_and_clear()
                 return
             
             self._show_all_transactions(transaction_list)
@@ -348,20 +364,13 @@ class UserInterface:
             if option == '0':
                 return
 
-            if option == '1':
-                self._modify_transaction()
-
-            elif option == '2':
-                self._filter_transactions()
-            
-            else:
-                self._sort_transactions()
+            command: Callable = self._transaction_management_submenu_dispatch_table.get(option)
+            command()
     
     def _show_all_transactions(self, transaction_list) -> list[Transaction]:
         """Mostra a lista de todas as transações no terminal"""
         transaction_table: Table = GraphTableBuilder.build_transaction_table(transaction_list)
 
-        self._console.clear()
         self._console.print(Rule('[bold blue]Lista de Transações[/]', style='cyan'))
         self._console.print('\n')        
         self._console.print(transaction_table)
@@ -374,10 +383,11 @@ class UserInterface:
         transaction_modification_choices = PanelBuilder.get_transaction_modification_submenu_choices()
 
         while True:
+            self._clear_screen()
             transaction_list = self._service.get_all_transactions()
             if not transaction_list:
                 return
-            self._console.print('\n')
+
             self._show_all_transactions(transaction_list)
             self._console.print('\n')
             self._console.print(transaction_modification_submenu, justify='center')
@@ -394,25 +404,19 @@ class UserInterface:
                 self._service.get_transaction_by_id(transaction_id)
             except ValueError as e:
                 self._console.print(f'[red]{e}[/]')
+                self._pause_and_clear()
                 return
             
-            if option == '1':
-                try:
-                    self._del_transaction(transaction_id)
-                except ValueError as e:
-                    self._console.print(f'{e}')
-            
-            elif option == '2':
-                try:
-                    self._update_category(transaction_id)
-                except ValueError as e:
-                    self._console.print(f'{e}')
-
-            else:
-                try:
-                    self._update_description(transaction_id)
-                except ValueError as e:
-                    self._console.print(f'{e}')
+            command: Callable[[int], None] = self._transaction_modification_submenu_dispatch_table.get(option)
+            try:
+                command(transaction_id)
+                confirmation_msg = 'Operação executada com sucesso!'
+                confirmation_panel = PanelBuilder.build_confirmation_panel(confirmation_msg)
+                self._console.print(confirmation_panel, justify='center')
+                self._pause_and_clear()
+            except ValueError as e:
+                self._console.print(f'{e}')
+                self._pause_and_clear()
 
     def _filter_transactions(self):
         ...
@@ -527,3 +531,11 @@ Exemplo: 01/01/2025[/]"""
             return False
         
         return True
+
+    # Métodos internos útilitários ------------------------------------------------------------------------------------
+    def _clear_screen(self):
+        self._console.clear()
+
+    def _pause_and_clear(self, msg: str='\nPressione enter para voltar...'):
+        self._console.input(msg)
+        self._clear_screen()
