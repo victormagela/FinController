@@ -1,3 +1,4 @@
+import os
 import re
 from collections.abc import Callable
 
@@ -135,14 +136,30 @@ class PanelBuilder:
     
     @staticmethod
     def build_transaction_sorter_submenu() -> Panel:
-        submenu_text = """[cyan][1][/]: Ordem Crescente
-[cyan][2][/]: Ordem Decrescente
+        submenu_text = """[cyan][1][/]: Ordenar por Valor
+[cyan][2][/]: Ordenar por Data
+[cyan][3][/]: Ordenar por ID
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Ordenação'
 
         submenu_panel = Panel(
             submenu_text,
             title=submenu_title,
+            expand=False,
+            border_style='cyan',
+            padding=(1,4)
+        )
+
+        return submenu_panel
+    
+    @staticmethod
+    def build_transaction_sort_order_submenu() -> Panel:
+        submenu_text = """[cyan][1][/]: Ordem Crescente
+[cyan][2][/]: Ordem Decrescente
+[cyan][0][/]: Voltar"""
+
+        submenu_panel = Panel(
+            submenu_text,
             expand=False,
             border_style='cyan',
             padding=(1,4)
@@ -210,6 +227,10 @@ class PanelBuilder:
     
     @staticmethod
     def get_transaction_sorter_submenu_choices() -> list[str]:
+        return ['1', '2', '3', '0']
+    
+    @staticmethod
+    def get_transaction_sort_order_choices() -> list[str]:
         return ['1', '2', '0']
     
 
@@ -249,6 +270,7 @@ class UserInterface:
     def __init__(self):
         self._service: TransactionService = TransactionService()
         self._console: Console = Console()
+        # Dicionários para execução dos comandos com o padrão Dispatch Table
         self._main_menu_dispatch_table: dict[str, Callable] = {
             '1': self._add_transaction,
             '2': self._manage_transactions
@@ -262,6 +284,12 @@ class UserInterface:
             '1': self._del_transaction,
             '2': self._update_category,
             '3': self._update_description
+        }
+        self.transaction_filter_submenu_dispatch_table: dict[str, Callable[[], list[Transaction]]] = {
+            '1': self.filter_by_amount,
+            '2': self.filter_by_type,
+            '3': self.filter_by_date,
+            '4': self.filter_by_category
         }
         
     def run(self) -> None:
@@ -419,12 +447,38 @@ class UserInterface:
                 self._pause_and_clear()
 
     def _filter_transactions(self):
-        ...
+        """Exibe um menu com todas as opções de filtragem, captura a escolha do usuário e a executa"""
+        transaction_filter_submenu = PanelBuilder.build_transaction_filter_submenu()
+        transaction_filter_choices = PanelBuilder.get_transaction_filter_submenu_choices()
+
+        while True:
+            self._clear_screen()
+            transaction_list = self._service.get_all_transactions()
+            if not transaction_list:
+                return
+            
+            self._show_all_transactions(transaction_list)
+            self._console.print('\n')
+            self._console.print(transaction_filter_submenu, justify='center')
+            option = PromptPTBR.ask(
+                'Digite o número da opção desejada',
+                choices=transaction_filter_choices
+                )
+            if option == '0':
+                return
+            
+            try:
+                command = self.transaction_filter_submenu_dispatch_table.get(option)
+                filtered_list = command()
+                self._show_all_transactions(filtered_list)
+            except ValueError as e:
+                self._console.print(f'[red]{e}[/]')
+                self._pause_and_clear()    
 
     def _sort_transactions(self):
         ...
 
-    # Métodos para atualizar dados individuais (categoria ou descrição) ou excluir uma transação da lista
+    # Métodos para atualizar dados individuais (categoria ou descrição) ou excluir uma transação da lista -------------
     def _del_transaction(self, transaction_id: int) -> None:
         self._service.del_transaction(transaction_id)
 
@@ -437,6 +491,26 @@ class UserInterface:
     def _update_description(self, transaction_id: int) -> None:
         new_description = self._collect_description()
         self._service.update_transaction_description(transaction_id, new_description)
+
+    # Métodos individuais para as opções de filtragem -----------------------------------------------------------------
+    def filter_by_amount(self) -> list[Transaction]:
+        orientation_msg = 'Você pode omitir um dos valores abaixos para a filtragem.'
+        orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
+
+        self._console.print(orientation_panel)
+        start_amount: str = self._console.input('Digite o valor inicial de filtragem: ').strip() or None
+        end_amount: str = self._console.input('Digite o valor final de filtragem: ').strip() or None
+
+        return self._service.filter_by_amount_range(start_amount, end_amount)
+    
+    def filter_by_type(self) -> list[Transaction]:
+        ...
+
+    def filter_by_date(self) -> list[Transaction]:
+        ...
+
+    def filter_by_category(self) -> list[Transaction]:
+        ...
 
     # Métodos de coleta de dados individuais --------------------------------------------------------------------------
     def _collect_amount(self) -> str:
@@ -534,7 +608,7 @@ Exemplo: 01/01/2025[/]"""
 
     # Métodos internos útilitários ------------------------------------------------------------------------------------
     def _clear_screen(self):
-        self._console.clear()
+        os.system('cls')
 
     def _pause_and_clear(self, msg: str='\nPressione enter para voltar...'):
         self._console.input(msg)

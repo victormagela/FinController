@@ -51,18 +51,17 @@ class TransactionService:
         self._manager.update_transaction_description(transaction_id, new_value)
 
     # Métodos de filtragem --------------------------------------------------------------------------------------------
-    def filter_by_amount_range(self, start_amount: str | float=0, end_amount: str | float=1e20) -> list[Transaction]:
-        if isinstance(start_amount, str):
-            parsed_start_amount: float = DataParser.to_valid_amount(start_amount)
+    def filter_by_amount_range(self, start_amount: str | None=None, end_amount: str | None=None) -> list[Transaction]:
+        """"Inicializa os valores convertidos como None. Se o usuário não fornecer um valor,
+        None será passado para o manager, que interpretará como "sem limite"
+        (usando 0 ou 1e20 conforme apropriado)"""
+        parsed_start_amount: int | float | None = None
+        parsed_end_amount: int | float | None = None
+        if start_amount and isinstance(start_amount, str):
+            parsed_start_amount = DataParser.to_valid_amount(start_amount)   
 
-        else:
-            parsed_start_amount: float = start_amount    
-        
-        if isinstance(end_amount, str):    
-            parsed_end_amount: float = DataParser.to_valid_amount(end_amount)
-        
-        else:
-            parsed_end_amount: float = end_amount
+        if end_amount and isinstance(end_amount, str):    
+            parsed_end_amount = DataParser.to_valid_amount(end_amount)
             
         return self._manager.filter_by_amount_range(parsed_start_amount, parsed_end_amount)
     

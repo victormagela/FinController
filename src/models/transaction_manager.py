@@ -65,8 +65,14 @@ class TransactionManager:
         raise ValueError(f'ID {transaction_id} não encontrado!')
     
     # Métodos de filtragem --------------------------------------------------------------------------------------------
-    def filter_by_amount_range(self, start: int | float=0, end: int | float=1e20):
+    def filter_by_amount_range(self, start: int | float | None=None, end: int | float | None=None):
         """Filtra a lista por um alcance de valor, e retorna uma nova lista com somente as transações neste alcance."""
+        if start is None:
+            start = 0
+        
+        if end is None:
+            end = 1e20
+
         return [transaction for transaction in self._transaction_list if start <= transaction.amount <= end]
     
     def filter_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
