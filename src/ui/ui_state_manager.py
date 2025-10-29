@@ -26,4 +26,5 @@ class UIStateManager:
             ]
 
     def clear_filtered_list(self) -> None:
-        self._filtered_list = None
+        if self._filtered_list is not None:
+            self._filtered_list = None

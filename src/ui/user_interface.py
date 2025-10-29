@@ -131,6 +131,7 @@ class PanelBuilder:
 [cyan][2][/]: Filtrar por Tipo
 [cyan][3][/]: Filtrar por Data
 [cyan][4][/]: Filtrar por Categoria
+[cyan][5][/]: Resetar Filtro
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Filtragem[/]'
 
@@ -227,7 +228,7 @@ class PanelBuilder:
     
     @staticmethod
     def get_transaction_filter_submenu_choices() -> list[str]:
-        return ['1', '2', '3', '4', '0']
+        return ['1', '2', '3', '4', '5', '0']
     
     @staticmethod
     def get_transaction_sorter_submenu_choices() -> list[str]:
@@ -489,6 +490,10 @@ class UserInterface:
                 )
             if option == '0':
                 return
+            
+            if option == '5':
+                self.state_manager.clear_filtered_list()
+                continue
             
             try:
                 command = self.transaction_filter_submenu_dispatch_table.get(option)
