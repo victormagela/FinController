@@ -20,6 +20,24 @@ EXPENSE_CATEGORY_TABLE: dict[str, str] = {
     '9': 'outros'
     }
 
+ALL_CATEGORIES_TABLE: dict[str, str] = {
+    '1': 'salário',
+    '2': 'investimento',
+    '3': 'freelance',
+    '4': 'venda',
+    '5': 'presente',
+    '6': 'reembolso',
+    '7': 'alimentação',
+    '8': 'transporte',
+    '9': 'moradia',
+    '10': 'saúde',
+    '11': 'educação',
+    '12': 'lazer',
+    '13': 'contas',
+    '14': 'vestuário',
+    '15': 'outros'
+}
+
 # Tabela que contém os tipos de transação válidos
 TRANSACTION_TYPE_TABLE: dict[str, str] = {
     '1': 'receita',

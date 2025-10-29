@@ -10,7 +10,8 @@ from rich.table import Table
 
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
-from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, TRANSACTION_TYPE_TABLE
+from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
+    ALL_CATEGORIES_TABLE, TRANSACTION_TYPE_TABLE
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
 
@@ -23,15 +24,13 @@ class PanelBuilder:
 [cyan][2][/cyan] Gerenciar Transações
 [cyan][0][/cyan] Sair"""
 
-        main_menu = Panel(
+        return Panel(
             menu_text,
             title='[bold blue]Menu Principal[/bold blue]',
             border_style='cyan',
             padding=(1,4),
             expand=False,
             )
-        
-        return main_menu
 
     @staticmethod
     def build_transaction_type_menu() -> Panel:
@@ -42,15 +41,13 @@ class PanelBuilder:
             
         transaction_type_menu_text: str = '\n'.join(menu_lines)
 
-        transaction_type_menu = Panel(
+        return Panel(
             transaction_type_menu_text,
             title='[bold blue]Tipos de Transação[/]',
             expand=False,
             border_style='cyan',
             padding=(1,4)
             )
-            
-        return transaction_type_menu
         
     @staticmethod
     def build_category_menu(transaction_type: str) -> Panel:
@@ -71,15 +68,31 @@ class PanelBuilder:
         menu_lines.append('[cyan][0][/] Definir mais tarde')
         category_menu_text: str = '\n'.join(menu_lines)
 
-        category_menu = Panel(
+        return Panel(
             category_menu_text,
             title=panel_title,
             expand=False,
             border_style='cyan',
             padding=(1,4)
             )
-            
-        return category_menu
+    
+    @staticmethod
+    def build_all_categories_filter_menu() -> Panel:
+        panel_title = '[bold blue]Todas as Categorias[/]'
+        menu_lines: list[str] = []
+        for index, category in ALL_CATEGORIES_TABLE.items():
+            menu_lines.append(f'[cyan][{index}][/] {category.capitalize()}')
+
+        all_categories_menu_text: str = '\n'.join(menu_lines)
+
+        return Panel(
+            all_categories_menu_text,
+            title=panel_title,
+            expand=False,
+            border_style='cyan',
+            padding=(1,4)
+        )
+
     
     @staticmethod
     def build_transaction_management_submenu() -> Panel:
@@ -89,14 +102,12 @@ class PanelBuilder:
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Gerenciamento[/]'
 
-        submenu_panel = Panel(
+        return Panel(
             submenu_text,
             title=submenu_title,
             expand=False,
             border_style='cyan',
             padding=(1,4))
-        
-        return submenu_panel
     
     @staticmethod
     def build_transaction_modification_submenu() -> Panel:
@@ -106,15 +117,13 @@ class PanelBuilder:
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Modificação[/]'
 
-        submenu_panel = Panel(
+        return Panel(
             submenu_text,
             title=submenu_title,
             expand=False,
             border_style='cyan',
             padding=(1,4)
         )
-
-        return submenu_panel
     
     @staticmethod
     def build_transaction_filter_submenu() -> Panel:
@@ -125,15 +134,13 @@ class PanelBuilder:
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Filtragem[/]'
 
-        submenu_panel = Panel(
+        return Panel(
             submenu_text, 
             title=submenu_title, 
             expand=False,
             border_style='cyan',
             padding=(1,4)
         )
-
-        return submenu_panel
     
     @staticmethod
     def build_transaction_sorter_submenu() -> Panel:
@@ -143,15 +150,13 @@ class PanelBuilder:
 [cyan][0][/]: Voltar"""
         submenu_title = '[bold blue]Opções de Ordenação'
 
-        submenu_panel = Panel(
+        return Panel(
             submenu_text,
             title=submenu_title,
             expand=False,
             border_style='cyan',
             padding=(1,4)
         )
-
-        return submenu_panel
     
     @staticmethod
     def build_transaction_sort_order_submenu() -> Panel:
@@ -159,38 +164,32 @@ class PanelBuilder:
 [cyan][2][/]: Ordem Decrescente
 [cyan][0][/]: Voltar"""
 
-        submenu_panel = Panel(
+        return Panel(
             submenu_text,
             expand=False,
             border_style='cyan',
             padding=(1,4)
         )
 
-        return submenu_panel
-
     @staticmethod
     def build_confirmation_panel(msg: str) -> Panel:
-        confirmation_panel = Panel(
+        return Panel(
             msg, 
             box=box.SQUARE,
             style='bold green',
             expand=False,
             padding=(0,0)
         )
-
-        return confirmation_panel
     
     @staticmethod
     def build_orientation_panel(msg: str) -> Panel:
-        orientation_panel = Panel(
+        return Panel(
             msg, 
             box=box.SQUARE,
             style='yellow',
             expand=False,
             padding=(0,0)
         )
-
-        return orientation_panel
         
     # Métodos que retornam uma lista de opções para o Prompt de Rich --------------------------------------------------
     @staticmethod
@@ -213,6 +212,10 @@ class PanelBuilder:
         choices = [number for number in categories]
         choices.append('0') # Opção de pular
         return choices
+    
+    @staticmethod
+    def get_all_categories_choices() -> list[str]:
+        return [number for number in ALL_CATEGORIES_TABLE]
     
     @staticmethod
     def get_transaction_management_submenu_choices() -> list[str]:
@@ -273,7 +276,7 @@ class UserInterface:
         self._console: Console = Console()
         self.state_manager: UIStateManager = UIStateManager()
         # Dicionários para execução dos comandos com o padrão Dispatch Table
-        self._main_menu_dispatch_table: dict[str, Callable] = {
+        self._main_menu_dispatch_table: dict[str, Callable[[], None]] = {
             '1': self._add_transaction,
             '2': self._manage_transactions
         }
@@ -288,20 +291,21 @@ class UserInterface:
             '3': self._update_description
         }
         self.transaction_filter_submenu_dispatch_table: dict[str, Callable[[], list[Transaction]]] = {
-            '1': self.filter_by_amount,
-            '2': self.filter_by_type,
-            '3': self.filter_by_date,
-            '4': self.filter_by_category
+            '1': self._filter_by_amount,
+            '2': self._filter_by_type,
+            '3': self._filter_by_date,
+            '4': self._filter_by_category
         }
         
     def run(self) -> None:
         while True:
             option: str = self._collect_main_menu_choice()
             if option == '0':
+                self._console.print('\n')
                 self._console.print('Obrigado por usar o FinController!', style='green')
                 break
 
-            command: Callable = self._main_menu_dispatch_table.get(option)
+            command: Callable[[], None] = self._main_menu_dispatch_table.get(option)
             command()
 
     def _collect_main_menu_choice(self) -> str:
@@ -523,7 +527,7 @@ class UserInterface:
         self._service.update_transaction_description(transaction_id, new_description)
 
     # Métodos individuais para as opções de filtragem -----------------------------------------------------------------
-    def filter_by_amount(self) -> list[Transaction]:
+    def _filter_by_amount(self) -> list[Transaction]:
         orientation_msg = 'Você pode omitir um dos valores abaixos para a filtragem.'
         orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
 
@@ -533,14 +537,38 @@ class UserInterface:
 
         return self._service.filter_by_amount_range(start_amount, end_amount)
     
-    def filter_by_type(self) -> list[Transaction]:
-        ...
+    def _filter_by_type(self) -> list[Transaction]:
+        transaction_type: str = self._collect_transaction_type()
+        return self._service.filter_by_type(transaction_type)
 
-    def filter_by_date(self) -> list[Transaction]:
-        ...
+    def _filter_by_date(self) -> list[Transaction]:
+        orientation_msg = 'Você pode omitir uma das datas abaixos para a filtragem.'
+        orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
+        DATE_FORMAT = """[yellow]DD/MM/AAAA
+Exemplo: 01/01/2025[/]"""
+        date_format_panel = PanelBuilder.build_orientation_panel(DATE_FORMAT)
 
-    def filter_by_category(self) -> list[Transaction]:
-        ...
+        self._console.print('\n')
+        self._console.print(date_format_panel)
+        self._console.print(orientation_panel)
+        start_date: str = self._console.input('Digite a data inicial de filtragem: ').strip() or None
+        end_date: str = self._console.input('Digite a data final de filtragem: ').strip() or None
+
+        return self._service.filter_by_date_range(start_date, end_date)
+
+    def _filter_by_category(self) -> list[Transaction]:
+        all_categories_menu = PanelBuilder.build_all_categories_filter_menu()
+        all_categories_choices = PanelBuilder.get_all_categories_choices()
+
+        self._console.print('\n')
+        self._console.print(all_categories_menu, justify='center')
+        category_option: str = PromptPTBR.ask(
+            'Digite o número da categoria',
+            choices=all_categories_choices
+        )
+        category: str = ALL_CATEGORIES_TABLE.get(category_option)
+
+        return self._service.filter_by_category(category)
 
     # Métodos de coleta de dados individuais --------------------------------------------------------------------------
     def _collect_amount(self) -> str:

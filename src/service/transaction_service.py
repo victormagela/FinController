@@ -65,8 +65,8 @@ class TransactionService:
             
         return self._manager.filter_by_amount_range(parsed_start_amount, parsed_end_amount)
     
-    def filter_by_type(self, type_) -> list[Transaction]:
-        parsed_type: TransactionType = DataParser.to_valid_transaction_type(type_)
+    def filter_by_type(self, transaction_type_str: str) -> list[Transaction]:
+        parsed_type: TransactionType = DataParser.to_valid_transaction_type(transaction_type_str)
         return self._manager.filter_by_type(parsed_type)
     
     def filter_by_date_range(self, start_date: str=None, end_date: str=None) -> list[Transaction]:
@@ -78,18 +78,20 @@ class TransactionService:
         parsed_start_date: date | None = None
         parsed_end_date: date | None = None
         if start_date:
-            parsed_start_date: date = DataParser.to_valid_transaction_date(start_date, DATE_FORMAT)
+            parsed_start_date = DataParser.to_valid_transaction_date(start_date, DATE_FORMAT)
 
         if end_date:
-            parsed_end_date: date = DataParser.to_valid_transaction_date(end_date, DATE_FORMAT)
+            parsed_end_date = DataParser.to_valid_transaction_date(end_date, DATE_FORMAT)
 
         return self._manager.filter_by_date_range(parsed_start_date, parsed_end_date)
     
     def filter_by_category(self, category: str) -> list[Transaction]:
         
         parsed_category: IncomeCategory | ExpenseCategory = DataParser.to_valid_category(category)
-        """Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
-        da dessa categoria de ambos os tipos."""
+        """
+        Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
+        dessa categoria de ambos os tipos.
+        """
         if parsed_category == IncomeCategory.OTHERS or parsed_category == ExpenseCategory.OTHERS:
             income_others: list[Transaction] = self._manager.filter_by_category(IncomeCategory.OTHERS)
             expense_others: list[Transaction] = self._manager.filter_by_category(ExpenseCategory.OTHERS)
