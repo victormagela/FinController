@@ -1,5 +1,7 @@
-from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
 from datetime import date
+
+from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
+import src.models.transaction_filters as filters
 
 
 class TransactionManager:
@@ -65,35 +67,21 @@ class TransactionManager:
         raise ValueError(f'ID {transaction_id} não encontrado!')
     
     # Métodos de filtragem --------------------------------------------------------------------------------------------
-    def filter_by_amount_range(self, start: int | float | None=None, end: int | float | None=None):
-        """Filtra a lista por um alcance de valor, e retorna uma nova lista com somente as transações neste alcance."""
-        if start is None:
-            start = 0
-        
-        if end is None:
-            end = 1e20
-
-        return [transaction for transaction in self._transaction_list if start <= transaction.amount <= end]
+    def filter_by_amount_range(
+            self, 
+            start: int | float | None=None, 
+            end: int | float | None=None
+            ) -> list[Transaction]:
+        return filters.filter_by_amount_range(self._transaction_list, start, end)
     
     def filter_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
-        """Filtra a lista por tipo de transação, e retorna uma nova lista com somente as transações deste tipo"""
-        return [
-            transaction for transaction in self._transaction_list if transaction.transaction_type == transaction_type
-            ]
+        return filters.filter_by_type(self._transaction_list, transaction_type)
     
     def filter_by_date_range(self, start: date=None, end: date=None) -> list[Transaction]:
-        """Filtra a lista por período, e retorna uma nova lista com somente as transações feitas neste período"""
-        if start is None:
-            start = date.min
-        
-        if end is None:
-            end = date.max
-
-        return [transaction for transaction in self._transaction_list if start <= transaction.transaction_date <= end]
+        return filters.filter_by_date_range(self._transaction_list, start, end)
 
     def filter_by_category(self, category: IncomeCategory | ExpenseCategory) -> list[Transaction]:
-        """Filtra a lista por categoria, e retorna uma nova lista com somente as transações desta categoria"""
-        return [transaction for transaction in self._transaction_list if transaction.category == category]
+        return filters.filter_by_category(self._transaction_list, category)
     
     # Métodos de ordenação --------------------------------------------------------------------------------------------
     def sort_by_amount(self, reverse: bool=False) -> list[Transaction]:

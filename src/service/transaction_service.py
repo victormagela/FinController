@@ -3,6 +3,7 @@ from datetime import date
 from src.models.transaction_manager import TransactionManager
 from src.models.transaction_builders import ParsedTransaction, DataParser, TransactionFactory
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
+import src.models.transaction_filters as filters
 
 
 class TransactionService:
@@ -20,7 +21,6 @@ class TransactionService:
         parsed_transaction_dict: ParsedTransaction = DataParser.parse(str_dict)
 
         transaction: Transaction = TransactionFactory.from_parser(parsed_transaction_dict)
-
         self._manager.add_transaction(transaction)
 
         return transaction
@@ -51,25 +51,42 @@ class TransactionService:
         self._manager.update_transaction_description(transaction_id, new_value)
 
     # Métodos de filtragem --------------------------------------------------------------------------------------------
-    def filter_by_amount_range(self, start_amount: str | None=None, end_amount: str | None=None) -> list[Transaction]:
-        """"Inicializa os valores convertidos como None. Se o usuário não fornecer um valor,
+    def filter_by_amount_range(
+            self, 
+            start_amount: str | None=None, 
+            end_amount: str | None=None,
+            filtered_list: list[Transaction]=None
+            ) -> list[Transaction]:
+        """"
+        Inicializa os valores convertidos como None. Se o usuário não fornecer um valor,
         None será passado para o manager, que interpretará como "sem limite"
-        (usando 0 ou 1e20 conforme apropriado)"""
+        (usando 0 ou 1e20 conforme apropriado).
+        Se já houver uma lista filtrada, aplica o novo filtro sobre essa ao invés da lista original.
+        """
         parsed_start_amount: int | float | None = None
         parsed_end_amount: int | float | None = None
+        
         if start_amount and isinstance(start_amount, str):
             parsed_start_amount = DataParser.to_valid_amount(start_amount)   
 
         if end_amount and isinstance(end_amount, str):    
             parsed_end_amount = DataParser.to_valid_amount(end_amount)
-            
-        return self._manager.filter_by_amount_range(parsed_start_amount, parsed_end_amount)
+
+        return self._manager.filter_by_amount_range(parsed_start_amount, parsed_end_amount) if filtered_list is None \
+            else filters.filter_by_amount_range(filtered_list, parsed_start_amount, parsed_end_amount)
     
-    def filter_by_type(self, transaction_type_str: str) -> list[Transaction]:
+    def filter_by_type(self, transaction_type_str: str, filtered_list: list[Transaction]=None) -> list[Transaction]:
         parsed_type: TransactionType = DataParser.to_valid_transaction_type(transaction_type_str)
-        return self._manager.filter_by_type(parsed_type)
+
+        return self._manager.filter_by_type(parsed_type) if filtered_list is None \
+            else filters.filter_by_type(filtered_list, parsed_type)
     
-    def filter_by_date_range(self, start_date: str=None, end_date: str=None) -> list[Transaction]:
+    def filter_by_date_range(
+            self, 
+            start_date: str=None, 
+            end_date: str=None, 
+            filtered_list: list[Transaction]=None
+            ) -> list[Transaction]:
         DATE_FORMAT = "%d/%m/%Y"
         
         """"Inicializa as datas convertidas como None. Se o usuário não fornecer uma data,
@@ -83,21 +100,30 @@ class TransactionService:
         if end_date:
             parsed_end_date = DataParser.to_valid_transaction_date(end_date, DATE_FORMAT)
 
-        return self._manager.filter_by_date_range(parsed_start_date, parsed_end_date)
+        return self._manager.filter_by_date_range(parsed_start_date, parsed_end_date) if filtered_list is None \
+            else filters.filter_by_date_range(filtered_list, parsed_start_date, parsed_end_date)
     
-    def filter_by_category(self, category: str) -> list[Transaction]:
+    def filter_by_category(self, category: str, filtered_list: list[Transaction]=None) -> list[Transaction]:
         
         parsed_category: IncomeCategory | ExpenseCategory = DataParser.to_valid_category(category)
+
+        # Decide qual lista usar como base
+        if filtered_list is None:
+            base_list: list[Transaction] = self._manager.get_all_transactions()
+        else:
+            base_list = filtered_list
         """
         Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
         dessa categoria de ambos os tipos.
+        Se houver uma listada filtrada, aplicamos o novo filtro sobre ela ao invés da lista original.
         """
         if parsed_category == IncomeCategory.OTHERS or parsed_category == ExpenseCategory.OTHERS:
-            income_others: list[Transaction] = self._manager.filter_by_category(IncomeCategory.OTHERS)
-            expense_others: list[Transaction] = self._manager.filter_by_category(ExpenseCategory.OTHERS)
+            income_others = filters.filter_by_category(base_list, IncomeCategory.OTHERS)
+            expense_others = filters.filter_by_category(base_list, ExpenseCategory.OTHERS)
             return income_others + expense_others
-        
-        return self._manager.filter_by_category(parsed_category)
+    
+        # Caso normal: filtrar pela categoria específica
+        return filters.filter_by_category(base_list, parsed_category)
     
     # Métodos de ordenação --------------------------------------------------------------------------------------------
     def sort_by_amount(self, order: str='crescente') -> list[Transaction]:

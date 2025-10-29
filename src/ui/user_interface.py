@@ -275,7 +275,7 @@ class UserInterface:
     def __init__(self):
         self._service: TransactionService = TransactionService()
         self._console: Console = Console()
-        self.state_manager: UIStateManager = UIStateManager()
+        self._state_manager: UIStateManager = UIStateManager()
         # Dicionários para execução dos comandos com o padrão Dispatch Table
         self._main_menu_dispatch_table: dict[str, Callable[[], None]] = {
             '1': self._add_transaction,
@@ -378,8 +378,8 @@ class UserInterface:
         """
         while True:
             self._clear_screen()
-            if self.state_manager.has_active_filter():
-                transaction_list = self.state_manager.filtered_list
+            if self._state_manager.has_active_filter():
+                transaction_list = self._state_manager.filtered_list
             
             else:
                 transaction_list = self._service.get_all_transactions()
@@ -406,8 +406,8 @@ class UserInterface:
             command: Callable = self._transaction_management_submenu_dispatch_table.get(option)
             command()
         
-        if self.state_manager.has_active_filter():
-            self.state_manager.clear_filtered_list()
+        if self._state_manager.has_active_filter():
+            self._state_manager.clear_filtered_list()
     
     def _show_all_transactions(self, transaction_list) -> list[Transaction]:
         """Mostra a lista de todas as transações no terminal"""
@@ -426,8 +426,8 @@ class UserInterface:
 
         while True:
             self._clear_screen()
-            if self.state_manager.has_active_filter():
-                transaction_list = self.state_manager.filtered_list
+            if self._state_manager.has_active_filter():
+                transaction_list = self._state_manager.filtered_list
             
             else:
                 transaction_list = self._service.get_all_transactions()
@@ -472,8 +472,8 @@ class UserInterface:
 
         while True:
             self._clear_screen()
-            if self.state_manager.has_active_filter():
-                transaction_list = self.state_manager.filtered_list
+            if self._state_manager.has_active_filter():
+                transaction_list = self._state_manager.filtered_list
             
             else:
                 transaction_list = self._service.get_all_transactions()
@@ -492,13 +492,18 @@ class UserInterface:
                 return
             
             if option == '5':
-                self.state_manager.clear_filtered_list()
+                self._state_manager.clear_filtered_list()
                 continue
             
             try:
                 command = self.transaction_filter_submenu_dispatch_table.get(option)
-                filtered_list = command()
-                self.state_manager.set_filtered_list(filtered_list)
+                if not self._state_manager.has_active_filter():
+                    filtered_list = command()
+                    self._state_manager.set_filtered_list(filtered_list)
+                
+                filtered_list = command(self._state_manager.filtered_list)
+                self._state_manager.set_filtered_list(filtered_list)
+
             except ValueError as e:
                 self._console.print(f'[red]{e}[/]')
                 self._pause_and_clear()    
@@ -510,8 +515,8 @@ class UserInterface:
     def _del_transaction(self, transaction_id: int) -> None:
         self._service.del_transaction(transaction_id)
 
-        if self.state_manager.has_active_filter():
-            self.state_manager.del_from_filtered_list(transaction_id)
+        if self._state_manager.has_active_filter():
+            self._state_manager.del_from_filtered_list(transaction_id)
 
     def _update_category(self, transaction_id: int) -> None:
         orientation_msg = 'Nota: Alterar a categoria de uma transação' \
@@ -524,15 +529,15 @@ class UserInterface:
         new_category = self._collect_category(transaction_type)
         self._service.update_transaction_category(transaction_id, new_category)
         
-        if self.state_manager.has_active_filter():
-            self.state_manager.clear_filtered_list()
+        if self._state_manager.has_active_filter():
+            self._state_manager.clear_filtered_list()
 
     def _update_description(self, transaction_id: int) -> None:
         new_description = self._collect_description()
         self._service.update_transaction_description(transaction_id, new_description)
 
     # Métodos individuais para as opções de filtragem -----------------------------------------------------------------
-    def _filter_by_amount(self) -> list[Transaction]:
+    def _filter_by_amount(self, filtered_list: list[Transaction]=None) -> list[Transaction]:
         orientation_msg = 'Você pode omitir um dos valores abaixos para a filtragem.'
         orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
 
@@ -540,13 +545,19 @@ class UserInterface:
         start_amount: str = self._console.input('Digite o valor inicial de filtragem: ').strip() or None
         end_amount: str = self._console.input('Digite o valor final de filtragem: ').strip() or None
 
-        return self._service.filter_by_amount_range(start_amount, end_amount)
+        if filtered_list is None:
+            return self._service.filter_by_amount_range(start_amount, end_amount)
+        
+        return self._service.filter_by_amount_range(start_amount, end_amount, filtered_list)
     
-    def _filter_by_type(self) -> list[Transaction]:
+    def _filter_by_type(self, filtered_list: list[Transaction]=None) -> list[Transaction]:
         transaction_type: str = self._collect_transaction_type()
-        return self._service.filter_by_type(transaction_type)
+        if filtered_list is None:
+            return self._service.filter_by_type(transaction_type)
 
-    def _filter_by_date(self) -> list[Transaction]:
+        return self._service.filter_by_type(transaction_type, filtered_list)
+    
+    def _filter_by_date(self, filtered_list: list[Transaction]=None) -> list[Transaction]:
         orientation_msg = 'Você pode omitir uma das datas abaixos para a filtragem.'
         orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
         DATE_FORMAT = """[yellow]DD/MM/AAAA
@@ -559,9 +570,12 @@ Exemplo: 01/01/2025[/]"""
         start_date: str = self._console.input('Digite a data inicial de filtragem: ').strip() or None
         end_date: str = self._console.input('Digite a data final de filtragem: ').strip() or None
 
-        return self._service.filter_by_date_range(start_date, end_date)
+        if filtered_list is None:
+            return self._service.filter_by_date_range(start_date, end_date)
+        
+        return self._service.filter_by_date_range(start_date, end_date, filtered_list)
 
-    def _filter_by_category(self) -> list[Transaction]:
+    def _filter_by_category(self, filtered_list: list[Transaction]=None) -> list[Transaction]:
         all_categories_menu = PanelBuilder.build_all_categories_filter_menu()
         all_categories_choices = PanelBuilder.get_all_categories_choices()
 
@@ -573,7 +587,10 @@ Exemplo: 01/01/2025[/]"""
         )
         category: str = ALL_CATEGORIES_TABLE.get(category_option)
 
-        return self._service.filter_by_category(category)
+        if filtered_list is None:
+            return self._service.filter_by_category(category)
+        
+        return self._service.filter_by_category(category, filtered_list)
 
     # Métodos de coleta de dados individuais --------------------------------------------------------------------------
     def _collect_amount(self) -> str:
