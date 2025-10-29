@@ -111,7 +111,7 @@ class TransactionService:
         if filtered_list is None:
             base_list: list[Transaction] = self._manager.get_all_transactions()
         else:
-            base_list = filtered_list
+            base_list: list[Transaction] = filtered_list
         """
         Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
         dessa categoria de ambos os tipos.
@@ -126,14 +126,37 @@ class TransactionService:
         return filters.filter_by_category(base_list, parsed_category)
     
     # Métodos de ordenação --------------------------------------------------------------------------------------------
-    def sort_by_amount(self, order: str='crescente') -> list[Transaction]:
+    def sort_by_amount(
+            self, 
+            order: str, 
+            filtered_list: list[Transaction] | None= None
+            ) -> list[Transaction]:
         reverse: bool = DataParser.to_boolean_sort_order(order)
-        return self._manager.sort_by_amount(reverse)
+
+        if filtered_list is None:
+            return self._manager.sort_by_amount(reverse)
+        
+        return sorted(filtered_list, key=lambda transaction: transaction.amount, reverse=reverse)
     
-    def sort_by_date(self, order: str='crescente') -> list[Transaction]:
+    def sort_by_date(
+            self, 
+            order: str,
+            filtered_list: list[Transaction] | None= None
+            ) -> list[Transaction]:
         reverse: bool = DataParser.to_boolean_sort_order(order)
-        return self._manager.sort_by_date(reverse)
+
+        if filtered_list is None:
+            return self._manager.sort_by_date(reverse)
+        
+        return sorted(filtered_list, key=lambda transaction: transaction.transaction_date, reverse=reverse)
     
-    def sort_by_id(self, order: str='crescente') -> list[Transaction]:
+    def sort_by_id(self, 
+                   order: str,
+                   filtered_list: list[Transaction] | None= None
+                   ) -> list[Transaction]:
         reverse: bool = DataParser.to_boolean_sort_order(order)
-        return self._manager.sort_by_id(reverse)
+
+        if filtered_list is None:
+            return self._manager.sort_by_id(reverse)
+        
+        return sorted(filtered_list, key=lambda transaction: transaction.id, reverse=reverse)
