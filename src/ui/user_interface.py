@@ -397,7 +397,7 @@ class UserInterface:
                 self._console.print('\n')
                 self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
                 self._pause_and_clear()
-                return
+                break
             
             self._show_all_transactions(transaction_list)
             transaction_management_submenu = PanelBuilder.build_transaction_management_submenu()
@@ -485,7 +485,7 @@ class UserInterface:
                 transaction_list: list[Transaction] = self._state_manager.filtered_list
             
             else:
-                transaction_list = self._service.get_all_transactions()
+                transaction_list: list[Transaction] = self._service.get_all_transactions()
                 
             if not transaction_list:
                 return
@@ -506,15 +506,11 @@ class UserInterface:
             
             try:
                 command: Callable[
-                    [list[Transaction] | None], list[Transaction]
+                    [list[Transaction]], list[Transaction]
                     ] = self.transaction_filter_submenu_dispatch_table.get(option)
-                if not self._state_manager.has_active_filter():
-                    filtered_list: list[Transaction] = command()
-                    self._state_manager.set_filtered_list(filtered_list)
-                    continue
                 
-                filtered_list = command(self._state_manager.filtered_list)
-                self._state_manager.set_filtered_list(filtered_list)
+                transaction_list = command(transaction_list)
+                self._state_manager.set_filtered_list(transaction_list)
 
             except ValueError as e:
                 self._console.print(f'[red]{e}[/]')
@@ -530,7 +526,7 @@ class UserInterface:
                 transaction_list: list[Transaction] = self._state_manager.filtered_list
             
             else:
-                transaction_list = self._service.get_all_transactions()
+                transaction_list: list[Transaction] = self._service.get_all_transactions()
                 
             if not transaction_list:
                 return
@@ -545,15 +541,11 @@ class UserInterface:
             
             try:
                 command: Callable[
-                    [list[Transaction] | None], list[Transaction]
+                    [list[Transaction]], list[Transaction]
                     ] = self.transaction_sorter_submenu_dispatch_table.get(option)
-                if not self._state_manager.has_active_filter():
-                    sorted_list: list[Transaction] = command()
-                    self._state_manager.set_filtered_list(sorted_list)
-                    continue
                 
-                sorted_list = command(self._state_manager.filtered_list)
-                self._state_manager.set_filtered_list(sorted_list)
+                transaction_list = command(transaction_list)
+                self._state_manager.set_filtered_list(transaction_list)
             
             except ValueError as e:
                 self._console.print(f'[red]{e}[/]')
@@ -585,7 +577,7 @@ class UserInterface:
         self._service.update_transaction_description(transaction_id, new_description)
 
     # Métodos individuais para as opções de ordenação -----------------------------------------------------------------
-    def _sort_by_amount(self, filtered_list : list[Transaction] | None=None) -> list[Transaction]:
+    def _sort_by_amount(self, transaction_list : list[Transaction] | None) -> list[Transaction]:
         sort_order_menu = PanelBuilder.build_transaction_sort_order_submenu()
         sort_order_choices = PanelBuilder.get_transaction_sort_order_choices()
 
@@ -593,12 +585,12 @@ class UserInterface:
         option = PromptPTBR.ask('Digite o número da ordenação desejada', choices=sort_order_choices)
         order = 'crescente' if option == '1' else 'decrescente'
 
-        if filtered_list is None:
+        if transaction_list is None:
             return self._service.sort_by_amount(order)
         
-        return self._service.sort_by_amount(order, filtered_list)
+        return self._service.sort_by_amount(order, transaction_list)
 
-    def _sort_by_date(self, filtered_list : list[Transaction] | None=None) -> list[Transaction]:
+    def _sort_by_date(self, transaction_list : list[Transaction] | None) -> list[Transaction]:
         sort_order_menu = PanelBuilder.build_transaction_sort_order_submenu()
         sort_order_choices = PanelBuilder.get_transaction_sort_order_choices()
 
@@ -606,12 +598,12 @@ class UserInterface:
         option = PromptPTBR.ask('Digite o número da ordenação desejada', choices=sort_order_choices)
         order = 'crescente' if option == '1' else 'decrescente'
 
-        if filtered_list is None:
+        if transaction_list is None:
             return self._service.sort_by_date(order)
         
-        return self._service.sort_by_date(order, filtered_list)
+        return self._service.sort_by_date(order, transaction_list)
 
-    def _sort_by_id(self, filtered_list : list[Transaction] | None=None) -> list[Transaction]:
+    def _sort_by_id(self, transaction_list : list[Transaction] | None) -> list[Transaction]:
         sort_order_menu = PanelBuilder.build_transaction_sort_order_submenu()
         sort_order_choices = PanelBuilder.get_transaction_sort_order_choices()
 
@@ -619,13 +611,13 @@ class UserInterface:
         option = PromptPTBR.ask('Digite o número da ordenação desejada', choices=sort_order_choices)
         order = 'crescente' if option == '1' else 'decrescente'
 
-        if filtered_list is None:
+        if transaction_list is None:
             return self._service.sort_by_id(order)
         
-        return self._service.sort_by_id(order, filtered_list)
+        return self._service.sort_by_id(order, transaction_list)
 
     # Métodos individuais para as opções de filtragem -----------------------------------------------------------------
-    def _filter_by_amount(self, filtered_list: list[Transaction] | None=None) -> list[Transaction]:
+    def _filter_by_amount(self, transaction_list: list[Transaction]) -> list[Transaction]:
         orientation_msg = 'Você pode omitir um dos valores abaixos para a filtragem.'
         orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
 
@@ -633,19 +625,14 @@ class UserInterface:
         start_amount: str = self._console.input('Digite o valor inicial de filtragem: ').strip() or None
         end_amount: str = self._console.input('Digite o valor final de filtragem: ').strip() or None
 
-        if filtered_list is None:
-            return self._service.filter_by_amount_range(start_amount, end_amount)
-        
-        return self._service.filter_by_amount_range(start_amount, end_amount, filtered_list)
+        return self._service.filter_by_amount_range(transaction_list, start_amount, end_amount)
     
-    def _filter_by_type(self, filtered_list: list[Transaction] | None=None) -> list[Transaction]:
+    def _filter_by_type(self, transaction_list: list[Transaction]) -> list[Transaction]:
         transaction_type: str = self._collect_transaction_type()
-        if filtered_list is None:
-            return self._service.filter_by_type(transaction_type)
 
-        return self._service.filter_by_type(transaction_type, filtered_list)
+        return self._service.filter_by_type(transaction_type, transaction_list)
     
-    def _filter_by_date(self, filtered_list: list[Transaction] | None=None) -> list[Transaction]:
+    def _filter_by_date(self, transaction_list: list[Transaction]) -> list[Transaction]:
         orientation_msg = 'Você pode omitir uma das datas abaixos para a filtragem.'
         orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
         DATE_FORMAT = """[yellow]DD/MM/AAAA
@@ -657,13 +644,10 @@ Exemplo: 01/01/2025[/]"""
         self._console.print(orientation_panel)
         start_date: str = self._console.input('Digite a data inicial de filtragem: ').strip() or None
         end_date: str = self._console.input('Digite a data final de filtragem: ').strip() or None
-
-        if filtered_list is None:
-            return self._service.filter_by_date_range(start_date, end_date)
         
-        return self._service.filter_by_date_range(start_date, end_date, filtered_list)
+        return self._service.filter_by_date_range(transaction_list, start_date, end_date)
 
-    def _filter_by_category(self, filtered_list: list[Transaction] | None=None) -> list[Transaction]:
+    def _filter_by_category(self, transaction_list: list[Transaction]) -> list[Transaction]:
         all_categories_menu = PanelBuilder.build_all_categories_filter_menu()
         all_categories_choices = PanelBuilder.get_all_categories_choices()
 
@@ -675,10 +659,10 @@ Exemplo: 01/01/2025[/]"""
         )
         category: str = ALL_CATEGORIES_TABLE.get(category_option)
 
-        if filtered_list is None:
+        if transaction_list is None:
             return self._service.filter_by_category(category)
         
-        return self._service.filter_by_category(category, filtered_list)
+        return self._service.filter_by_category(category, transaction_list)
 
     # Métodos de coleta de dados individuais --------------------------------------------------------------------------
     def _collect_amount(self) -> str:

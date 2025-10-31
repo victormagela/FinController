@@ -1,7 +1,4 @@
-from datetime import date
-
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
-import src.models.transaction_filters as filters
 
 
 class TransactionManager:
@@ -65,30 +62,3 @@ class TransactionManager:
                 return
                     
         raise ValueError(f'ID {transaction_id} não encontrado!')
-    
-    # Métodos de filtragem --------------------------------------------------------------------------------------------
-    def filter_by_amount_range(
-            self, 
-            start: int | float | None=None, 
-            end: int | float | None=None
-            ) -> list[Transaction]:
-        return filters.filter_by_amount_range(self._transaction_list, start, end)
-    
-    def filter_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
-        return filters.filter_by_type(self._transaction_list, transaction_type)
-    
-    def filter_by_date_range(self, start: date=None, end: date=None) -> list[Transaction]:
-        return filters.filter_by_date_range(self._transaction_list, start, end)
-
-    def filter_by_category(self, category: IncomeCategory | ExpenseCategory) -> list[Transaction]:
-        return filters.filter_by_category(self._transaction_list, category)
-    
-    # Métodos de ordenação --------------------------------------------------------------------------------------------
-    def sort_by_amount(self, reverse: bool=False) -> list[Transaction]:
-        return sorted(self._transaction_list, key=lambda transaction: transaction.amount, reverse=reverse)
-    
-    def sort_by_date(self, reverse: bool=False) -> list[Transaction]:
-        return sorted(self._transaction_list, key=lambda transaction: transaction.transaction_date, reverse=reverse)
-    
-    def sort_by_id(self, reverse: bool=False) -> list[Transaction]:
-        return sorted(self._transaction_list, key=lambda transaction: transaction.id, reverse=reverse)
