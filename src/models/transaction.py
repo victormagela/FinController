@@ -102,11 +102,14 @@ class Transaction():
     """
     _transaction_counter: int = 0 # Contador de instâncias
 
-    def __init__(self, amount: float, 
+    def __init__(
+                 self,
+                 amount: float, 
                  transaction_type: TransactionType, 
                  transaction_date: date, 
                  category: IncomeCategory | ExpenseCategory = None, 
-                 description: str = None) -> None:
+                 description: str = None,
+                 transaction_id: int = None) -> None:
         self._validate_amount(amount)
         self._amount: float = amount
         self._validate_type(transaction_type)
@@ -127,10 +130,22 @@ class Transaction():
             self._description: str = 'Descrição não adicionada'
         else:
             self._description: str = description
-        # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. 
-        # Garante que cada instância terá um ID único.
-        Transaction._transaction_counter += 1
-        self._id: int = Transaction._transaction_counter 
+        if transaction_id is None:
+            # Incrementa o contador da classe em 1, e define o ID da transação com este novo valor. 
+            # Garante que cada nova instância terá um ID único.
+            Transaction._transaction_counter += 1
+            self._id: int = Transaction._transaction_counter
+        else:
+            # Se um ID for passado, como no caso da leitura de um arquivo de transações
+            # Define o ID da transação com esse ID passado
+            self._id = transaction_id
+            if transaction_id > Transaction._transaction_counter:
+                # Se o ID passado for maior que o contador atual de transações, chama o método que define o contador
+                # de transações com o valor do novo ID. Garantindo que qualquer nova transação sempre será gerada
+                # a partir do maior ID.
+                Transaction.set_transaction_counter(transaction_id)
+            
+
 
     def __repr__(self):
         return (f"Transaction(value={self._amount!r}, \n"

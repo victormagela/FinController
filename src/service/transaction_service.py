@@ -18,9 +18,9 @@ class TransactionService:
 
     # Métodos básicos de lista ----------------------------------------------------------------------------------------
     def add_transaction(self, str_dict: dict[str, str]) -> Transaction:
-        parsed_transaction_dict: ParsedTransaction = DataParser.parse(str_dict)
+        parsed_transaction_dict: ParsedTransaction = DataParser.parse_from_user(str_dict)
 
-        transaction: Transaction = TransactionFactory.from_parser(parsed_transaction_dict)
+        transaction: Transaction = TransactionFactory.from_user(parsed_transaction_dict)
         self._manager.add_transaction(transaction)
 
         return transaction

@@ -1,21 +1,26 @@
-from typing import TypedDict, NotRequired
+from typing import TypedDict, NotRequired, Any
 from datetime import datetime, date
 
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
 
 
 class ParsedTransaction(TypedDict):
-    amount : float
+    amount : float | int
     transaction_type : TransactionType
     transaction_date : date
     category : NotRequired[IncomeCategory | ExpenseCategory | None]
     description : NotRequired[str | None]
+    """
+    Este campo só é passado quando obtido transações de fora do programa,
+    caso contrário o ID é gerado dinâmicamente
+    """
+    transaction_id : NotRequired[int]
 
 
 class DataParser:
-    # Método de conversão geral ---------------------------------------------------------------------------------------
+    # Métodos de conversão geral ---------------------------------------------------------------------------------------
     @staticmethod
-    def parse(str_dict: dict[str, str]) -> ParsedTransaction:
+    def parse_from_user(str_dict: dict[str, str]) -> ParsedTransaction:
         """
         Converte dados recebidos do usuário nos tipos corretos para a construção do objeto Transaction.
         
@@ -34,7 +39,7 @@ class DataParser:
         category_str: str | None = str_dict.get('category', None)
         description: str | None = str_dict.get('description', None)
 
-        amount: float = DataParser.to_valid_amount(amount_str)
+        amount: float | int = DataParser.to_valid_amount(amount_str)
 
         transaction_type: TransactionType = DataParser.to_valid_transaction_type(transaction_type_str)
         
@@ -49,6 +54,34 @@ class DataParser:
             'category' : category,
             'description' : description
         }
+    
+    @staticmethod
+    def parse_from_json(transaction_json: list[dict[str, Any]]) -> list[ParsedTransaction]:
+        DATE_FORMAT = "%d/%m/%Y"
+        parsed_transaction_dict_list = []
+        for transaction_dict in transaction_json:
+            amount = transaction_dict['amount']
+            transaction_type_str = transaction_dict['transaction_type']
+            transaction_date_str = transaction_dict['transaction_date']
+            category_str = transaction_dict['category']
+            description = transaction_dict['description']
+            transaction_id = transaction_dict['transaction_id']
+
+            transaction_type = DataParser.to_valid_transaction_type(transaction_type_str)
+            transaction_date = DataParser.to_valid_transaction_date(transaction_date_str, DATE_FORMAT)
+            category = DataParser.to_valid_category(category_str)
+
+            transaction_dict = {
+            'amount' : amount,
+            'transaction_type' : transaction_type,
+            'transaction_date' : transaction_date,
+            'category' : category,
+            'description' : description,
+            'transaction_id' : transaction_id
+        }
+            parsed_transaction_dict_list.append(transaction_dict)
+
+        return parsed_transaction_dict_list
     
     # Métodos individuais de conversão --------------------------------------------------------------------------------
     @staticmethod
@@ -124,7 +157,7 @@ class TransactionFactory:
     """Construtor alternativo"""
 
     @staticmethod
-    def from_parser(parsed_dict: ParsedTransaction) -> Transaction:
+    def from_user(parsed_dict: ParsedTransaction) -> Transaction:
         """Retorna uma instância de Transaction a partir do dicionário obtido de DataParser com os tipos corretos."""        
 
         amount: float = parsed_dict['amount']
@@ -134,3 +167,21 @@ class TransactionFactory:
         description: str | None = parsed_dict.get('description', None)
                 
         return Transaction(amount, transaction_type, transaction_date, category, description)
+    
+    @staticmethod
+    def from_json(parsed_dict_list: list[ParsedTransaction]) -> list[Transaction]:
+        """Retorna lista de instâncias de Transaction a partir da lista de dicionários obtidos de DataParser"""
+        transaction_list = []
+        for parsed_dict in parsed_dict_list:
+            amount = parsed_dict['amount']
+            transaction_type = parsed_dict['transaction_type']
+            transaction_date = parsed_dict['transaction_date']
+            category = parsed_dict['category']
+            description = parsed_dict['description']
+            transaction_id = parsed_dict['transaction_id']
+
+            transaction_list.append(
+                Transaction(amount, transaction_type, transaction_date, category, description, transaction_id)
+                )
+        
+        return transaction_list

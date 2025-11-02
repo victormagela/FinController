@@ -7,3 +7,4 @@ test_models.py
 tests/
 .pytest_cache
 .vscode/*
+data/
