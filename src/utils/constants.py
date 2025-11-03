@@ -43,3 +43,5 @@ TRANSACTION_TYPE_TABLE: dict[str, str] = {
     '1': 'receita',
     '2': 'despesa'
 }
+
+DATE_FORMAT = "%d/%m/%Y"

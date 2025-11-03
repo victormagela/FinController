@@ -1,16 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from datetime import date, datetime
-import locale
-
-# Tentativa de configurar locale para formatação em pt_br.
-# Nem todos os sistemas têm o mesmo nome de locale, por isso protegemos com um bloco try/except.
-try:
-    locale.setlocale(locale.LC_ALL, 'pt_br.UTF-8')
-except Exception:
-    # Caso o sistema não reconheça, mantém a formatação padrão.
-    pass
+from datetime import date
 
 
 class TransactionType(Enum):
@@ -180,27 +171,12 @@ class Transaction():
         return self._transaction_type
 
     @property
-    def transaction_type_str(self) -> str:
-        """Retorna o tipo da transação em formato mais legível."""
-        return str(self._transaction_type.value).capitalize()
-
-    @property
     def amount(self) -> float:
         return self._amount
-    
-    @property
-    def amount_formatted_brazil(self) -> str:
-        """Retorna o valor formatado em moeda brasileira (ex. R$ 1.234,50) para melhor legibilidade."""
-        return locale.currency(self._amount, grouping=True)
 
     @property   
     def transaction_date(self) -> date:
         return self._transaction_date
-    
-    @property
-    def transaction_date_str(self) -> str:
-        """Retorna a data da transação em formato DD/MM/AAAA para melhor legibilidade."""
-        return datetime.strftime(self._transaction_date, '%d/%m/%Y')
 
     @property
     def category(self) -> IncomeCategory | ExpenseCategory:
@@ -217,11 +193,6 @@ class Transaction():
             self._validate_category(new_category)
         
         self._category = new_category
-
-    @property
-    def category_str(self) -> str:
-        """Retorna a categoria da transação em formato mais legível."""
-        return str(self._category.value).capitalize()
 
     @property
     def description(self) -> str:

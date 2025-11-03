@@ -14,6 +14,7 @@ from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
     ALL_CATEGORIES_TABLE, TRANSACTION_TYPE_TABLE
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
+import src.service.transaction_formatter as formatter
 
 
 class PanelBuilder:
@@ -256,10 +257,10 @@ class GraphTableBuilder:
         for transaction in transactions_list:
             transaction_table.add_row(
                 str(transaction.id), 
-                transaction.transaction_type_str, 
-                transaction.amount_formatted_brazil, 
-                transaction.transaction_date_str, 
-                transaction.category_str, 
+                formatter.format_transaction_type(transaction.transaction_type), 
+                formatter.format_currency_for_ptbr(transaction.amount), 
+                formatter.format_date(transaction.transaction_date), 
+                formatter.format_category(transaction.category), 
                 transaction.description, 
                 style='green' if transaction.transaction_type_str == 'Receita' else 'red')
 

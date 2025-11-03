@@ -3,7 +3,9 @@ from datetime import date
 from src.models.transaction_manager import TransactionManager
 from src.models.transaction_builders import ParsedTransaction, DataParser, TransactionFactory
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
-from src.service.filter_engine import FilterEngine
+import src.service.transaction_operations as operations
+import src.service.transaction_statistics as statistics
+import src.service.transaction_formatter as formatter
 
 
 class TransactionService:
@@ -71,12 +73,12 @@ class TransactionService:
         if end_amount and isinstance(end_amount, str):    
             parsed_end_amount = DataParser.to_valid_amount(end_amount)
 
-        return FilterEngine.filter_by_amount_range(transaction_list, parsed_start_amount, parsed_end_amount)
+        return operations.filter_by_amount_range(transaction_list, parsed_start_amount, parsed_end_amount)
     
     def filter_by_type(self, transaction_type_str: str, transaction_list: list[Transaction]) -> list[Transaction]:
         parsed_type: TransactionType = DataParser.to_valid_transaction_type(transaction_type_str)
 
-        return FilterEngine.filter_by_type(parsed_type, transaction_list)
+        return operations.filter_by_type(parsed_type, transaction_list)
     
     def filter_by_date_range(
             self, 
@@ -97,7 +99,7 @@ class TransactionService:
         if end_date:
             parsed_end_date = DataParser.to_valid_transaction_date(end_date, DATE_FORMAT)
 
-        return FilterEngine.filter_by_date_range(transaction_list, parsed_start_date, parsed_end_date) 
+        return operations.filter_by_date_range(transaction_list, parsed_start_date, parsed_end_date) 
     
     def filter_by_category(self, category: str, transaction_list: list[Transaction]) -> list[Transaction]:
         
@@ -109,12 +111,12 @@ class TransactionService:
         Se houver uma listada filtrada, aplicamos o novo filtro sobre ela ao invés da lista original.
         """
         if parsed_category == IncomeCategory.OTHERS or parsed_category == ExpenseCategory.OTHERS:
-            income_others = FilterEngine.filter_by_category(IncomeCategory.OTHERS, transaction_list)
-            expense_others = FilterEngine.filter_by_category(ExpenseCategory.OTHERS, transaction_list)
+            income_others = operations.filter_by_category(IncomeCategory.OTHERS, transaction_list)
+            expense_others = operations.filter_by_category(ExpenseCategory.OTHERS, transaction_list)
             return income_others + expense_others
     
         # Caso normal: filtrar pela categoria específica
-        return FilterEngine.filter_by_category(parsed_category, transaction_list)
+        return operations.filter_by_category(parsed_category, transaction_list)
     
     # Métodos de ordenação --------------------------------------------------------------------------------------------
     def sort_by_amount(
@@ -124,7 +126,7 @@ class TransactionService:
             ) -> list[Transaction]:
         reverse: bool = DataParser.to_boolean_sort_order(order)
 
-        return FilterEngine.sort_by_amount(reverse, transaction_list)
+        return operations.sort_by_amount(reverse, transaction_list)
     
     def sort_by_date(
             self, 
@@ -132,7 +134,7 @@ class TransactionService:
             transaction_list: list[Transaction]
             ) -> list[Transaction]:
         reverse: bool = DataParser.to_boolean_sort_order(order)
-        return FilterEngine.sort_by_date(reverse, transaction_list)
+        return operations.sort_by_date(reverse, transaction_list)
     
     def sort_by_id(
             self, 
@@ -141,4 +143,13 @@ class TransactionService:
             ) -> list[Transaction]:
         reverse: bool = DataParser.to_boolean_sort_order(order)
 
-        return FilterEngine.sort_by_id(reverse, transaction_list)
+        return operations.sort_by_id(reverse, transaction_list)
+    
+    # Métodos que retornam estatísticas -------------------------------------------------------------------------------
+    def get_number_of_transactions(self, transaction_list: list[Transaction]) -> int:
+        return statistics.get_number_of_transactions(transaction_list)
+
+    def get_balance(self, transaction_list: list[Transaction]) -> str:
+        balance = statistics.calculate_balance(transaction_list)
+
+        return formatter.format_currency_for_ptbr(balance)
