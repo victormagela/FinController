@@ -12,7 +12,7 @@ Projeto pessoal com dupla finalidade:
 
 - [x] Adicionar transações (receitas e despesas)
 - [x] Salvar transações em arquivo
-- [ ] Gerar relatório com saldo total
+- [x] Gerar relatório com saldo total
 - [x] Listar todas as transações
 
 ## Tecnologias
@@ -21,4 +21,5 @@ Projeto pessoal com dupla finalidade:
 
 ## Status
 
-🚧 Em desenvolvimento - estrutura inicial
+ - MVP concluído
+🚧 Em desenvolvimento - Interface Gráfica

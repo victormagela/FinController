@@ -146,10 +146,18 @@ class TransactionService:
         return operations.sort_by_id(reverse, transaction_list)
     
     # Métodos que retornam estatísticas -------------------------------------------------------------------------------
-    def get_number_of_transactions(self, transaction_list: list[Transaction]) -> int:
+    def get_number_of_transactions(self) -> int:
+        transaction_list = self._manager.get_all_transactions()
         return statistics.get_number_of_transactions(transaction_list)
+    
+    def get_total_income(self) -> int | float:
+        transaction_list = self._manager.get_all_transactions()
+        return statistics.calculate_total_income(transaction_list)
+    
+    def get_total_expense(self) -> int | float:
+        transaction_list = self._manager.get_all_transactions()
+        return statistics.calculate_total_expense(transaction_list)
 
-    def get_balance(self, transaction_list: list[Transaction]) -> str:
-        balance = statistics.calculate_balance(transaction_list)
-
-        return formatter.format_currency_for_ptbr(balance)
+    def get_balance(self) -> int | float:
+        transaction_list = self._manager.get_all_transactions()
+        return statistics.calculate_balance(transaction_list)

@@ -7,6 +7,7 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich import box
 from rich.table import Table
+from rich.text import Text
 
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
@@ -20,6 +21,13 @@ import src.service.transaction_statistics as statistics
 
 class PanelBuilder:
     """Constrói Menus e Painéis para a interface CLI"""
+
+    @staticmethod
+    def build_dashboard() -> Panel:
+        dashboard_text = Text('Suas Finanças - Resumo', style='cyan', justify='center')
+
+        return Panel(dashboard_text, box=box.SQUARE_DOUBLE_HEAD, border_style='blue')
+
     @staticmethod
     def build_main_menu() -> Panel:
         menu_text: str = """[cyan][1][/cyan] Adicionar Transação
@@ -324,6 +332,8 @@ class UserInterface:
         
     def run(self) -> None:
         while True:
+            self._clear_screen()
+            self.show_dashboard()
             option: str = self._collect_main_menu_choice()
             if option == '0':
                 self._console.print('\n')
@@ -333,12 +343,43 @@ class UserInterface:
             command: Callable[[], None] = self._main_menu_dispatch_table.get(option)
             command()
 
+    def show_dashboard(self) -> None:
+        dashboard = PanelBuilder.build_dashboard()
+        self._console.print(dashboard)
+        number_of_transactions = self._service.get_number_of_transactions()
+        total_income = self._service.get_total_income()
+        total_expense = self._service.get_total_expense()
+        balance = self._service.get_balance()
+        formatted_number_of_transaction = Text(
+            f'Você possui {number_of_transactions} transação(ões) contabilizada(s).', style='cyan'
+        )
+        cyan_line_separator = Text("─"*50, style='cyan', justify='center')
+        formatted_income = Text(
+            f'Receitas: {formatter.format_currency_for_ptbr(total_income)}', style='green'
+        )
+        formatted_expense = Text(
+            f'Despesas: {formatter.format_currency_for_ptbr(total_expense)}', style='red'
+        )
+        formatted_balance = Text(
+            f'Saldo: {formatter.format_currency_for_ptbr(balance)}',
+            style='green' if balance >= 0 else 'red',
+        )
+        self._console.print(
+            formatted_number_of_transaction,
+            cyan_line_separator,
+            formatted_income,
+            formatted_expense,
+            cyan_line_separator,
+            formatted_balance,
+            sep='\n',
+            justify='center'
+        )
+
     def _collect_main_menu_choice(self) -> str:
         main_menu = PanelBuilder.build_main_menu()
         main_menu_choices = PanelBuilder.get_main_menu_choices()
         
         self._console.print('\n')
-        self._clear_screen()
         self._console.print(main_menu, justify='center')
         option: str = PromptPTBR.ask(
             'Digite o número da opção desejada', 
@@ -442,7 +483,7 @@ class UserInterface:
 
         self._console.print(Rule('[bold blue]Lista de Transações[/]', style='cyan'))
         self._console.print('\n')        
-        self._console.print(transaction_table)
+        self._console.print(transaction_table, justify='center')
 
         return transaction_list
     
