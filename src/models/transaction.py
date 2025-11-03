@@ -49,14 +49,16 @@ class ExpenseCategory(Enum):
 
     Valores:
     FOOD : representa gastos com alimentação como mercados, restaurantes, delivery ('alimentação')
-    TRANSPORTATION : representa gastos com trasportes, como gasolina, transporte público, manutenção de veículo ('transporte')
+    TRANSPORTATION : representa gastos com trasportes, como gasolina, transporte público, 
+    manutenção de veículo ('transporte')
     HOUSING : representa gastos com moradia, como aluguel, manutenção, IPTU ('moradia')
     HEALTH : representa gastos com saúde como hospital, remédios, academia ('saúde')
     EDUCATION : representa gastos com educação como escola, faculdade, cursos ('educação')
     LEISURE : representa gastos com lazer como cinema, jogos, parques, viagens ('lazer')
     BILLS : representa gastos com contas como água, luz, internet ('contas')
     CLOTHING : representa gastos com vestuário como roupas, calçados, acessórios ('vestuário')
-    OTHER : representa uma despesa que não se encaixa em nenhuma das categorias acimas, também é a categoria padrão para receitas não definidas pelo usuário ('outros')
+    OTHER : representa uma despesa que não se encaixa em nenhuma das categorias acimas, 
+    também é a categoria padrão para receitas não definidas pelo usuário ('outros')
     """
     FOOD = 'alimentação'
     TRANSPORTATION = 'transporte'

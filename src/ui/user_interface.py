@@ -15,6 +15,7 @@ from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
 import src.service.transaction_formatter as formatter
+import src.service.transaction_statistics as statistics
 
 
 class PanelBuilder:
@@ -243,16 +244,29 @@ class PanelBuilder:
 class GraphTableBuilder:
     @staticmethod
     def build_transaction_table(transactions_list: list[Transaction]) -> Table:
-        transaction_table = Table(
-            '[cyan]ID[/]', 
-            '[cyan]Tipo[/]', 
-            '[cyan]Valor[/]',
-            '[cyan]Data[/]',  
-            '[cyan]Categoria[/]', 
-            '[cyan]Descrição[/]', 
+        transaction_table = Table( 
             title='Transações', 
-            style='bold blue'
+            style='bold blue',
+            show_footer=True
             )
+        number_of_transactions = statistics.get_number_of_transactions(transactions_list)
+        formatted_number_of_transactions = f'{number_of_transactions} transação(ões) contabilizada(s).'
+        total_balance = statistics.calculate_balance(transactions_list)
+        formatted_balance = formatter.format_currency_for_ptbr(total_balance)
+        transaction_table.add_column(
+            '[cyan]ID[/]', style='cyan', footer=formatted_number_of_transactions, footer_style='cyan'
+            )
+        transaction_table.add_column('[cyan]Tipo[/]', style='cyan')
+        transaction_table.add_column(
+            '[cyan]Valor[/]',
+            style='cyan',
+            footer=f'Saldo: {formatted_balance}',
+            footer_style='green' if total_balance >= 0 else 'red',
+            justify='right'
+            )
+        transaction_table.add_column('[cyan]Data[/]', style='cyan')
+        transaction_table.add_column('[cyan]Categoria[/]', style='cyan')
+        transaction_table.add_column('[cyan]Descrição[/]', style='cyan')
         
         for transaction in transactions_list:
             transaction_table.add_row(
@@ -262,7 +276,7 @@ class GraphTableBuilder:
                 formatter.format_date(transaction.transaction_date), 
                 formatter.format_category(transaction.category), 
                 transaction.description, 
-                style='green' if transaction.transaction_type_str == 'Receita' else 'red')
+                style='green' if transaction.transaction_type.value == 'receita' else 'red')
 
         return transaction_table
     
@@ -401,6 +415,9 @@ class UserInterface:
                 break
             
             self._show_all_transactions(transaction_list)
+            if self._state_manager.has_active_filter():
+                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                self._console.print(filter_warning)
             transaction_management_submenu = PanelBuilder.build_transaction_management_submenu()
             transaction_management_choices = PanelBuilder.get_transaction_management_submenu_choices()
 
@@ -446,6 +463,9 @@ class UserInterface:
                 return
 
             self._show_all_transactions(transaction_list)
+            if self._state_manager.has_active_filter():
+                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                self._console.print(filter_warning)
             self._console.print('\n')
             self._console.print(transaction_modification_submenu, justify='center')
             option = PromptPTBR.ask(
@@ -492,6 +512,9 @@ class UserInterface:
                 return
             
             self._show_all_transactions(transaction_list)
+            if self._state_manager.has_active_filter():
+                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                self._console.print(filter_warning)
             self._console.print('\n')
             self._console.print(transaction_filter_submenu, justify='center')
             option = PromptPTBR.ask(
@@ -533,6 +556,9 @@ class UserInterface:
                 return
             
             self._show_all_transactions(transaction_list)
+            if self._state_manager.has_active_filter():
+                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                self._console.print(filter_warning)
             self._console.print('\n')
             self._console.print(transaction_sorter_submenu, justify='center')
             option = PromptPTBR.ask('Digite o número da opção desejada', choices=transaction_sorter_choices)
