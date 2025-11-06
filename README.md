@@ -22,4 +22,4 @@ Projeto pessoal com dupla finalidade:
 ## Status
 
  - MVP concluído
-🚧 Em desenvolvimento - Interface Gráfica
+ - 🚧 Em desenvolvimento - Interface Gráfica

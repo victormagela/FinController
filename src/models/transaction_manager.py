@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
-from typing import Any
 
 from src.models.transaction import Transaction, IncomeCategory, ExpenseCategory
-from src.models.json_serializer import JSONSerializer
-from src.models.transaction_builders import DataParser, TransactionFactory
+import src.models.data_parser as parser
+from src.models.typed_dicts import SerializedTransaction
+import src.models.json_serializer as serializer
 
 
 class TransactionManager:
@@ -90,7 +90,7 @@ class TransactionRepository:
         return data_file_path
     
     def save(self, transaction_list: list[Transaction]) -> None:
-        transaction_json = JSONSerializer.to_JSON(transaction_list)
+        transaction_json = serializer.to_JSON(transaction_list)
 
         with open(self._file_path, 'w', encoding='utf-8') as file:
             json.dump(transaction_json, file, indent=4, ensure_ascii=False)
@@ -100,10 +100,10 @@ class TransactionRepository:
         if file_content is None:
             return []
 
-        parsed_transaction_dict_list = DataParser.parse_from_json(file_content)
-        return TransactionFactory.from_json(parsed_transaction_dict_list)
+        parsed_transaction_dict_list = parser.parse_from_json(file_content)
+        return Transaction.from_json(parsed_transaction_dict_list)
 
-    def _load(self) -> list[dict[str, Any]] | None:
+    def _load(self) -> list[SerializedTransaction] | None:
         if self._file_path.exists():
             try:
                 with open(self._file_path, 'r', encoding='utf-8') as file:

@@ -1,79 +1,9 @@
 from __future__ import annotations
 
-from enum import Enum
 from datetime import date
 
-
-class TransactionType(Enum):
-    """
-    Enumeração simples que representa os possíveis tipos de transação.
-
-    Valores:
-    INCOME: representa uma receita ('receita')
-    EXPENSE: representa uma despesa ('despesa')
-    """
-    INCOME = 'receita'
-    EXPENSE = 'despesa'
-
-
-class IncomeCategory(Enum):
-    """
-    Enumeração que representa as possíveis categorias de receita.
-
-    Valores:
-    WAGE : representa o salário ('salário')
-    FREELANCE : representa receitas de trabalho freelancer ('freelance')
-    INVESTIMENT : representa o retorno financeiro de investimentos ('investimento')
-    SALE : representa receitas advindas de vendas ('venda')
-    GIFT : representa presentes em dinheiro ou doações que venha a receber ('presente')
-    REIMBURSEMENT : representa devoluções e reembolsos de despesas ('reembolso')
-    OTHER : representa uma receita que não se encaixa em nenhuma das categorias acimas, também é a categoria padrão para receitas não definidas pelo usuário ('outros') 
-    """
-    WAGE = 'salário'
-    FREELANCE = 'freelance'
-    INVESTIMENT = 'investimento'
-    SALE = 'venda'
-    GIFT = 'presente'
-    REIMBURSEMENT = 'reembolso'
-    OTHERS = 'outros'
-
-    @classmethod
-    def get_all_values(cls):
-        """Retorna uma lista com todos os valores possíveis de categoria."""
-        return [income.value for income in cls]
-
-
-class ExpenseCategory(Enum):
-    """
-    Enumeração que representa as possíveis categorias de despesa.
-
-    Valores:
-    FOOD : representa gastos com alimentação como mercados, restaurantes, delivery ('alimentação')
-    TRANSPORTATION : representa gastos com trasportes, como gasolina, transporte público, 
-    manutenção de veículo ('transporte')
-    HOUSING : representa gastos com moradia, como aluguel, manutenção, IPTU ('moradia')
-    HEALTH : representa gastos com saúde como hospital, remédios, academia ('saúde')
-    EDUCATION : representa gastos com educação como escola, faculdade, cursos ('educação')
-    LEISURE : representa gastos com lazer como cinema, jogos, parques, viagens ('lazer')
-    BILLS : representa gastos com contas como água, luz, internet ('contas')
-    CLOTHING : representa gastos com vestuário como roupas, calçados, acessórios ('vestuário')
-    OTHER : representa uma despesa que não se encaixa em nenhuma das categorias acimas, 
-    também é a categoria padrão para receitas não definidas pelo usuário ('outros')
-    """
-    FOOD = 'alimentação'
-    TRANSPORTATION = 'transporte'
-    HOUSING = 'moradia'
-    HEALTH = 'saúde'
-    EDUCATION  = 'educação'
-    LEISURE = 'lazer'
-    BILLS = 'contas'
-    CLOTHING = 'vestuário'
-    OTHERS = 'outros'
-
-    @classmethod
-    def get_all_values(cls):
-        """Retorna uma lista com todos os valores possíveis de categoria."""
-        return [expense.value for expense in cls]
+from src.models.typed_dicts import ParsedTransaction
+from src.models.enums import TransactionType, IncomeCategory, ExpenseCategory
 
 
 class Transaction():
@@ -166,6 +96,37 @@ class Transaction():
     def reset_transaction_counter(cls):
         """Método privado para reiniciar a contagem de transações"""
         cls._transaction_counter = 0
+
+    # Construtores alternativos ---------------------------------------------------------------------------------------
+    @classmethod
+    def from_user_input(cls, parsed_dict: ParsedTransaction) -> Transaction:
+        """Retorna uma instância de Transaction a partir do dicionário obtido de data_parser com os tipos corretos."""        
+
+        amount: float = parsed_dict['amount']
+        transaction_type: TransactionType = parsed_dict['transaction_type']
+        transaction_date: date = parsed_dict['transaction_date']
+        category: ExpenseCategory | IncomeCategory | None = parsed_dict.get('category', None)
+        description: str | None = parsed_dict.get('description', None)
+                
+        return cls(amount, transaction_type, transaction_date, category, description)
+
+    @classmethod
+    def from_json(cls, parsed_dict_list: list[ParsedTransaction]) -> list[Transaction]:
+        """Retorna lista de instâncias de Transaction a partir da lista de dicionários obtidos de data_parser."""
+        transaction_list = []
+        for parsed_dict in parsed_dict_list:
+            amount = parsed_dict['amount']
+            transaction_type = parsed_dict['transaction_type']
+            transaction_date = parsed_dict['transaction_date']
+            category = parsed_dict['category']
+            description = parsed_dict['description']
+            transaction_id = parsed_dict['transaction_id']
+
+            transaction_list.append(
+                cls(amount, transaction_type, transaction_date, category, description, transaction_id)
+            )
+        
+        return transaction_list
 
     #Propriedades públicas --------------------------------------------------------------------------------------------
     @property

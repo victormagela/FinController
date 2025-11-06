@@ -1,11 +1,11 @@
 from datetime import date
 
 from src.models.transaction_manager import TransactionManager
-from src.models.transaction_builders import ParsedTransaction, DataParser, TransactionFactory
+import src.models.data_parser as parser
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
 import src.service.transaction_operations as operations
 import src.service.transaction_statistics as statistics
-import src.service.transaction_formatter as formatter
+from src.models.typed_dicts import ParsedTransaction
 
 
 class TransactionService:
@@ -20,9 +20,9 @@ class TransactionService:
 
     # Métodos básicos de lista ----------------------------------------------------------------------------------------
     def add_transaction(self, str_dict: dict[str, str]) -> Transaction:
-        parsed_transaction_dict: ParsedTransaction = DataParser.parse_from_user(str_dict)
+        parsed_transaction_dict: ParsedTransaction = parser.parse_from_user(str_dict)
 
-        transaction: Transaction = TransactionFactory.from_user(parsed_transaction_dict)
+        transaction: Transaction = Transaction.from_user_input(parsed_transaction_dict)
         self._manager.add_transaction(transaction)
 
         return transaction
@@ -46,7 +46,7 @@ class TransactionService:
 
     # Métodos de atualização ------------------------------------------------------------------------------------------
     def update_transaction_category(self, transaction_id: int, new_value: str):
-        parsed_new_value: IncomeCategory | ExpenseCategory | None = DataParser.to_valid_category(new_value)
+        parsed_new_value: IncomeCategory | ExpenseCategory | None = parser.to_valid_category(new_value)
         self._manager.update_transaction_category(transaction_id, parsed_new_value)
 
     def update_transaction_description(self, transaction_id: int, new_value: str):
@@ -68,15 +68,15 @@ class TransactionService:
         parsed_end_amount: int | float = 1e20
         
         if start_amount and isinstance(start_amount, str):
-            parsed_start_amount = DataParser.to_valid_amount(start_amount)   
+            parsed_start_amount = parser.to_valid_amount(start_amount)   
 
         if end_amount and isinstance(end_amount, str):    
-            parsed_end_amount = DataParser.to_valid_amount(end_amount)
+            parsed_end_amount = parser.to_valid_amount(end_amount)
 
         return operations.filter_by_amount_range(transaction_list, parsed_start_amount, parsed_end_amount)
     
     def filter_by_type(self, transaction_type_str: str, transaction_list: list[Transaction]) -> list[Transaction]:
-        parsed_type: TransactionType = DataParser.to_valid_transaction_type(transaction_type_str)
+        parsed_type: TransactionType = parser.to_valid_transaction_type(transaction_type_str)
 
         return operations.filter_by_type(parsed_type, transaction_list)
     
@@ -94,16 +94,16 @@ class TransactionService:
         parsed_start_date: date = date.min
         parsed_end_date: date = date.max
         if start_date:
-            parsed_start_date = DataParser.to_valid_transaction_date(start_date, DATE_FORMAT)
+            parsed_start_date = parser.to_valid_transaction_date(start_date, DATE_FORMAT)
 
         if end_date:
-            parsed_end_date = DataParser.to_valid_transaction_date(end_date, DATE_FORMAT)
+            parsed_end_date = parser.to_valid_transaction_date(end_date, DATE_FORMAT)
 
         return operations.filter_by_date_range(transaction_list, parsed_start_date, parsed_end_date) 
     
     def filter_by_category(self, category: str, transaction_list: list[Transaction]) -> list[Transaction]:
         
-        parsed_category: IncomeCategory | ExpenseCategory = DataParser.to_valid_category(category)
+        parsed_category: IncomeCategory | ExpenseCategory = parser.to_valid_category(category)
 
         """
         Se a categoria for 'outros', como ela existe tanto em despesas quanto receitas, retornamos as transações
@@ -124,7 +124,7 @@ class TransactionService:
             order: str, 
             transaction_list: list[Transaction]
             ) -> list[Transaction]:
-        reverse: bool = DataParser.to_boolean_sort_order(order)
+        reverse: bool = parser.to_boolean_sort_order(order)
 
         return operations.sort_by_amount(reverse, transaction_list)
     
@@ -133,7 +133,7 @@ class TransactionService:
             order: str,
             transaction_list: list[Transaction]
             ) -> list[Transaction]:
-        reverse: bool = DataParser.to_boolean_sort_order(order)
+        reverse: bool = parser.to_boolean_sort_order(order)
         return operations.sort_by_date(reverse, transaction_list)
     
     def sort_by_id(
@@ -141,7 +141,7 @@ class TransactionService:
             order: str,
             transaction_list: list[Transaction]
             ) -> list[Transaction]:
-        reverse: bool = DataParser.to_boolean_sort_order(order)
+        reverse: bool = parser.to_boolean_sort_order(order)
 
         return operations.sort_by_id(reverse, transaction_list)
     
