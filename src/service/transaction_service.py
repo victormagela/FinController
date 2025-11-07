@@ -4,7 +4,7 @@ from src.models.transaction_manager import TransactionManager
 import src.models.data_parser as parser
 from src.models.transaction import Transaction, TransactionType, IncomeCategory, ExpenseCategory
 import src.service.transaction_operations as operations
-import src.service.transaction_statistics as statistics
+from src.service.transaction_statistics import TransactionStatisticsCalculator, TransactionStatistics
 from src.models.typed_dicts import ParsedTransaction
 
 
@@ -17,6 +17,7 @@ class TransactionService:
     """
     def __init__(self):
         self._manager = TransactionManager()
+        self.statistics = TransactionStatisticsCalculator(self._manager.get_all_transactions())
 
     # Métodos básicos de lista ----------------------------------------------------------------------------------------
     def add_transaction(self, str_dict: dict[str, str]) -> Transaction:
@@ -146,18 +147,9 @@ class TransactionService:
         return operations.sort_by_id(reverse, transaction_list)
     
     # Métodos que retornam estatísticas -------------------------------------------------------------------------------
-    def get_number_of_transactions(self) -> int:
-        transaction_list = self._manager.get_all_transactions()
-        return statistics.get_number_of_transactions(transaction_list)
+    def get_statistics(self) -> TransactionStatistics:
+        return self.statistics.statistics
     
-    def get_total_income(self) -> int | float:
-        transaction_list = self._manager.get_all_transactions()
-        return statistics.calculate_total_income(transaction_list)
-    
-    def get_total_expense(self) -> int | float:
-        transaction_list = self._manager.get_all_transactions()
-        return statistics.calculate_total_expense(transaction_list)
-
-    def get_balance(self) -> int | float:
-        transaction_list = self._manager.get_all_transactions()
-        return statistics.calculate_balance(transaction_list)
+    # Método para atualizar as estatísticas de acordo com o estado da lista atual sendo exibida -----------------------
+    def update_statistics(self, new_transaction_list: list[Transaction]) -> None:
+        self.statistics.update_statistics(new_transaction_list)

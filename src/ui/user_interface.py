@@ -16,7 +16,7 @@ from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
 import src.service.transaction_formatter as formatter
-import src.service.transaction_statistics as statistics
+from src.service.transaction_statistics import TransactionStatistics
 
 
 class PanelBuilder:
@@ -251,15 +251,15 @@ class PanelBuilder:
 
 class GraphTableBuilder:
     @staticmethod
-    def build_transaction_table(transactions_list: list[Transaction]) -> Table:
+    def build_transaction_table(transactions_list: list[Transaction], statistics: TransactionStatistics) -> Table:
         transaction_table = Table( 
             title='Transações', 
             style='bold blue',
             show_footer=True
             )
-        number_of_transactions = statistics.get_number_of_transactions(transactions_list)
-        formatted_number_of_transactions = f'{number_of_transactions} transação(ões) contabilizada(s).'
-        total_balance = statistics.calculate_balance(transactions_list)
+        transaction_count = statistics.transaction_count
+        formatted_number_of_transactions = f'{transaction_count} transação(ões) contabilizada(s).'
+        total_balance = statistics.balance
         formatted_balance = formatter.format_currency_for_ptbr(total_balance)
         transaction_table.add_column(
             '[cyan]ID[/]', style='cyan', footer=formatted_number_of_transactions, footer_style='cyan'
@@ -346,12 +346,13 @@ class UserInterface:
     def show_dashboard(self) -> None:
         dashboard = PanelBuilder.build_dashboard()
         self._console.print(dashboard)
-        number_of_transactions = self._service.get_number_of_transactions()
-        total_income = self._service.get_total_income()
-        total_expense = self._service.get_total_expense()
-        balance = self._service.get_balance()
+        statistics = self._service.get_statistics()
+        transaction_count = statistics.transaction_count
+        total_income = statistics.total_income
+        total_expense = statistics.total_expense
+        balance = statistics.balance
         formatted_number_of_transaction = Text(
-            f'Você possui {number_of_transactions} transação(ões) contabilizada(s).', style='cyan'
+            f'Você possui {transaction_count} transação(ões) contabilizada(s).', style='cyan'
         )
         cyan_line_separator = Text("─"*50, style='cyan', justify='center')
         formatted_income = Text(
@@ -479,7 +480,8 @@ class UserInterface:
     
     def _show_all_transactions(self, transaction_list) -> list[Transaction]:
         """Mostra a lista de todas as transações no terminal"""
-        transaction_table: Table = GraphTableBuilder.build_transaction_table(transaction_list)
+        statistics = self._service.get_statistics()
+        transaction_table: Table = GraphTableBuilder.build_transaction_table(transaction_list, statistics)
 
         self._console.print(Rule('[bold blue]Lista de Transações[/]', style='cyan'))
         self._console.print('\n')        
