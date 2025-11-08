@@ -52,3 +52,11 @@ def sort_by_id(
     ) -> list[Transaction]:
         
      return sorted(transaction_list, key=lambda transaction: transaction.id, reverse=reverse)
+
+def get_min_date(transaction_list: list[Transaction]) -> date:
+    date_list = [transaction.transaction_date for transaction in transaction_list]
+    return min(date_list)
+
+def get_max_date(transaction_list: list[Transaction]) -> date:
+    date_list = [transaction.transaction_date for transaction in transaction_list]
+    return max(date_list)

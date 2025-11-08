@@ -153,3 +153,10 @@ class TransactionService:
     # Método para atualizar as estatísticas de acordo com o estado da lista atual sendo exibida -----------------------
     def update_statistics(self, new_transaction_list: list[Transaction]) -> None:
         self.statistics.update_statistics(new_transaction_list)
+
+    # Métodos que retornam a menor e a maior data ---------------------------------------------------------------------
+    def get_min_date(self, transaction_list: list[Transaction]) -> date:
+        return operations.get_min_date(transaction_list)
+    
+    def get_max_date(self, transaction_list: list[Transaction]) -> date:
+        return operations.get_max_date(transaction_list)
