@@ -11,8 +11,8 @@ from rich.text import Text
 
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
-from src.utils.constants import INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
-    ALL_CATEGORIES_TABLE
+from src.utils.constants import (INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
+    ALL_CATEGORIES_TABLE, APP_TITLE)
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
 import src.service.transaction_formatter as formatter
@@ -66,6 +66,8 @@ class UserInterface:
     def run(self) -> None:
         while True:
             self._clear_screen()
+            title = APP_TITLE
+            self._console.print(title, style='bold blue')
             self.show_dashboard()
             option: str = self._collect_main_menu_choice()
             if option == '0':
@@ -79,6 +81,8 @@ class UserInterface:
     def show_dashboard(self) -> None:
         dashboard = PanelBuilder.build_dashboard()
         self._console.print(dashboard)
+        transaction_list = self._service.get_all_transactions()
+        self._service.update_statistics(transaction_list)
         statistics = self._service.get_statistics()
         transaction_count = statistics.transaction_count
         total_income = statistics.total_income
@@ -211,8 +215,6 @@ class UserInterface:
         
         if self._state_manager.has_active_filter():
             self._state_manager.clear_filtered_list()
-            transaction_list = self._service.get_all_transactions()
-            self._service.update_statistics(transaction_list)
     
     def _show_all_transactions(self, transaction_list) -> list[Transaction]:
         """Mostra a lista de todas as transações no terminal"""

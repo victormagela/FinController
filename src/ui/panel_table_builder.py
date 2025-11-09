@@ -4,7 +4,7 @@ from rich import box
 from rich.text import Text
 
 from src.utils.constants import (
-    TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE
+    TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE, APP_TITLE
 )
 import src.service.transaction_formatter as formatter
 from src.models.transaction import Transaction
@@ -12,7 +12,6 @@ from src.service.transaction_statistics import TransactionStatistics
 
 class PanelBuilder:
     """Constrói Menus e Painéis para a interface CLI"""
-
     @staticmethod
     def build_dashboard() -> Panel:
         dashboard_text = Text('Suas Finanças - Resumo', style='cyan', justify='center')
