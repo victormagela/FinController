@@ -188,7 +188,8 @@ class UserInterface:
                 self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
                 self._pause_and_clear()
                 break
-            
+
+            self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
                 filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
@@ -210,6 +211,8 @@ class UserInterface:
         
         if self._state_manager.has_active_filter():
             self._state_manager.clear_filtered_list()
+            transaction_list = self._service.get_all_transactions()
+            self._service.update_statistics(transaction_list)
     
     def _show_all_transactions(self, transaction_list) -> list[Transaction]:
         """Mostra a lista de todas as transações no terminal"""
@@ -238,6 +241,7 @@ class UserInterface:
             if not transaction_list:
                 return
 
+            self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
                 filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
@@ -332,6 +336,7 @@ class UserInterface:
             if not transaction_list:
                 return
             
+            self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
                 filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
@@ -379,8 +384,10 @@ class UserInterface:
         self._console.print(overview_panel)
         self._console.print(income_overview_panel)
         self._console.print(expense_overview_panel)
-        self._console.print(income_report_table)
-        self._console.print(expense_report_table)
+        if income_report_table.row_count > 0:
+            self._console.print(income_report_table)
+        if expense_report_table.row_count > 0:
+            self._console.print(expense_report_table)
         self._pause_and_clear()
 
     # Métodos para atualizar dados individuais (categoria ou descrição) ou excluir uma transação da lista -------------

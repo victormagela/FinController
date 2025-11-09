@@ -12,7 +12,7 @@ class ReportConstructor:
         self._start_date: date = start_date
         self._end_date: date = end_date
 
-    def generate_full_report(self) -> tuple[Panel | Table]:
+    def generate_full_report(self) -> tuple[Panel | Table, ...]:
         overview_text = self._compose_overview_text()
         income_overview_text = self._compose_income_overview_text()
         expense_overview_text = self._compose_expense_overview_text()
@@ -44,7 +44,7 @@ class ReportConstructor:
     def _compose_income_overview_text(self) -> str:
         if self._statistics.income_category_with_highest_amount is None \
         and self._statistics.income_category_with_most_transactions is None:
-            return 'nenhuma receita encontrada'
+            return 'Nenhuma receita encontrada'
         
         income_count = self._statistics.income_transaction_count
         total_income = formatter.format_currency_for_ptbr(self._statistics.total_income)
@@ -70,7 +70,7 @@ class ReportConstructor:
     def _compose_expense_overview_text(self) -> str:
         if self._statistics.expense_category_with_highest_amount is None \
         and self._statistics.expense_category_with_most_transactions is None:
-            return 'nenhuma receita encontrada'
+            return 'Nenhuma receita encontrada'
         
         expense_count = self._statistics.expense_transaction_count
         total_expense = formatter.format_currency_for_ptbr(self._statistics.total_expense)
@@ -100,7 +100,7 @@ class ReportConstructor:
         rows = []
 
         for category in self._statistics.total_per_income_category:
-            category_name = category.value
+            category_name = formatter.format_category(category)
             total = self._statistics.total_per_income_category[category]
             count = self._statistics.count_per_income_category[category]
             amount_percentage = self._statistics.percentage_per_income_category[category]
@@ -130,7 +130,7 @@ class ReportConstructor:
         rows = []
 
         for category in self._statistics.total_per_expense_category:
-            category_name = category.value
+            category_name = formatter.format_category(category)
             total = self._statistics.total_per_expense_category[category]
             count = self._statistics.count_per_expense_category[category]
             amount_percentage = self._statistics.percentage_per_expense_category[category]

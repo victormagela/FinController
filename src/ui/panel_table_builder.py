@@ -317,7 +317,8 @@ class GraphTableBuilder:
     def build_income_report_table(row_content: list[list[str]]) -> Table:
         report_table = Table(
             title='Breakdown de Receitas por Categoria',
-            style='bold blue'
+            style='bold blue',
+            header_style= 'bold cyan'
         )
 
         report_table.add_column('Categoria', style='cyan')
@@ -335,7 +336,8 @@ class GraphTableBuilder:
     def build_expense_report_table(row_content: list[list[str]]) -> Table:
         report_table = Table(
             title='Breakdown de Despesas por Categoria',
-            style='bold blue'
+            style='bold blue',
+            header_style= 'bold cyan'
         )
 
         report_table.add_column('Categoria', style='cyan')
