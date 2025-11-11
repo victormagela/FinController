@@ -1,7 +1,6 @@
 import os
 import re
 from collections.abc import Callable
-from datetime import date
 
 from rich.console import Console
 from rich.panel import Panel
@@ -11,14 +10,14 @@ from rich.text import Text
 
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
-from src.utils.constants import (INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE,\
-    ALL_CATEGORIES_TABLE, APP_TITLE)
+from src.utils.constants import (
+    INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE, APP_TITLE
+)
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
-import src.service.transaction_formatter as formatter
-from src.service.transaction_statistics import TransactionStatistics
-from src.ui.report import ReportConstructor
-from src.ui.panel_table_builder import PanelBuilder, GraphTableBuilder
+import src.ui.formatter as formatter
+from src.ui.report_constructor import ReportConstructor
+import  src.ui.panel_table_builder as ptbuilder
     
 
 class UserInterface:
@@ -79,7 +78,7 @@ class UserInterface:
             command()
 
     def show_dashboard(self) -> None:
-        dashboard = PanelBuilder.build_dashboard()
+        dashboard = ptbuilder.build_dashboard()
         self._console.print(dashboard)
         transaction_list = self._service.get_all_transactions()
         self._service.update_statistics(transaction_list)
@@ -114,8 +113,8 @@ class UserInterface:
         )
 
     def _collect_main_menu_choice(self) -> str:
-        main_menu = PanelBuilder.build_main_menu()
-        main_menu_choices = PanelBuilder.get_main_menu_choices()
+        main_menu = ptbuilder.build_main_menu()
+        main_menu_choices = ptbuilder.get_main_menu_choices()
         
         self._console.print('\n')
         self._console.print(main_menu, justify='center')
@@ -130,7 +129,7 @@ class UserInterface:
             self._service.add_transaction(raw_data_dict)
 
             confirmation_msg = 'Transação adicionada com sucesso!'
-            confirmation_panel = PanelBuilder.build_confirmation_panel(confirmation_msg)
+            confirmation_panel = ptbuilder.build_confirmation_panel(confirmation_msg)
             self._console.print(confirmation_panel, justify='center')
             self._pause_and_clear()
         except ValueError as e:
@@ -147,33 +146,33 @@ class UserInterface:
 
         self._clear_screen()
         self._console.print('\n')
-        self._console.print(Rule('[bold blue]Nova Transação[/]', style='cyan'))
-        self._console.print('\n')
+        self._print_section_title('Nova Transação')
 
-        self._console.print(Rule('[bold blue]Valor da Transação[/]', style='cyan', characters='.'))
+        self._print_section_title('Valor da Transação', characters='.')
         amount: str = self._collect_amount()
         raw_transaction_data_dict['amount'] = amount
         
-        self._console.print(Rule('\n[bold blue]Tipo da Transação[/]', style='cyan', characters='.'))
+        self._print_section_title('Tipo da Transação', characters='.')
         transaction_type: str = self._collect_transaction_type()
         raw_transaction_data_dict['transaction_type'] = transaction_type
 
-        self._console.print(Rule('\n[bold blue]Data da Transação[/]', style='cyan', characters='.'))
+        self._print_section_title('Data da Transação', characters='.')
         transaction_date: str = self._collect_transaction_date()
         raw_transaction_data_dict['transaction_date'] = transaction_date
 
-        self._console.print(Rule('\n[bold blue]Categoria da Transação[/]', style='cyan', characters='.'))
+        self._print_section_title('Categoria da Transação', characters='.')
         category: str | None = self._collect_category(transaction_type)
         if category:
             raw_transaction_data_dict['category'] = category
 
-        self._console.print(Rule('\n[bold blue]Descrição da Transação[/]', style='cyan', characters='.'))
+        self._print_section_title('Descrição da Transação', characters='.')
         description: str | None = self._collect_description()
         if description:
             raw_transaction_data_dict['description'] = description
 
         return raw_transaction_data_dict
-    
+
+    # Métodos que representam os diversos submenus do programa e suas funcionalidades ---------------------------------
     def _manage_transactions(self) ->None:
         """
         Método que pega a lista de transações do _service e as mostra, 
@@ -181,12 +180,7 @@ class UserInterface:
         """
         while True:
             self._clear_screen()
-            if self._state_manager.has_active_filter():
-                transaction_list: list[Transaction] = self._state_manager.filtered_list
-            
-            else:
-                transaction_list = self._service.get_all_transactions()
-                
+            transaction_list = self._get_transaction_list_for_display()    
             if not transaction_list:
                 self._console.print('\n')
                 self._console.print('[red]Não há nenhum item na sua lista de transações. Adicione um primeiro.[/]')
@@ -196,10 +190,10 @@ class UserInterface:
             self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
-                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                filter_warning = ptbuilder.build_orientation_panel('Você possui um filtro ativo.')
                 self._console.print(filter_warning)
-            transaction_management_submenu = PanelBuilder.build_transaction_management_submenu()
-            transaction_management_choices = PanelBuilder.get_transaction_management_submenu_choices()
+            transaction_management_submenu = ptbuilder.build_transaction_management_submenu()
+            transaction_management_choices = ptbuilder.get_transaction_management_submenu_choices()
 
             self._console.print('\n')
             self._console.print(transaction_management_submenu, justify='center')
@@ -216,37 +210,21 @@ class UserInterface:
         if self._state_manager.has_active_filter():
             self._state_manager.clear_filtered_list()
     
-    def _show_all_transactions(self, transaction_list) -> list[Transaction]:
-        """Mostra a lista de todas as transações no terminal"""
-        statistics = self._service.get_statistics()
-        transaction_table: Table = GraphTableBuilder.build_transaction_table(transaction_list, statistics)
-
-        self._console.print(Rule('[bold blue]Lista de Transações[/]', style='cyan'))
-        self._console.print('\n')        
-        self._console.print(transaction_table, justify='center')
-
-        return transaction_list
-    
     def _modify_transaction(self) -> None:
         """Apresenta um menu de possíveis modificações, captura a escolha do usuário e a executa"""
-        transaction_modification_submenu = PanelBuilder.build_transaction_modification_submenu()
-        transaction_modification_choices = PanelBuilder.get_transaction_modification_submenu_choices()
+        transaction_modification_submenu = ptbuilder.build_transaction_modification_submenu()
+        transaction_modification_choices = ptbuilder.get_transaction_modification_submenu_choices()
 
         while True:
             self._clear_screen()
-            if self._state_manager.has_active_filter():
-                transaction_list: list[Transaction] = self._state_manager.filtered_list
-            
-            else:
-                transaction_list = self._service.get_all_transactions()
-            
+            transaction_list = self._get_transaction_list_for_display()
             if not transaction_list:
                 return
 
             self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
-                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                filter_warning = ptbuilder.build_orientation_panel('Você possui um filtro ativo.')
                 self._console.print(filter_warning)
             self._console.print('\n')
             self._console.print(transaction_modification_submenu, justify='center')
@@ -270,7 +248,7 @@ class UserInterface:
             try:
                 command(transaction_id)
                 confirmation_msg = 'Operação executada com sucesso!'
-                confirmation_panel = PanelBuilder.build_confirmation_panel(confirmation_msg)
+                confirmation_panel = ptbuilder.build_confirmation_panel(confirmation_msg)
                 self._console.print(confirmation_panel, justify='center')
                 self._pause_and_clear()
             except ValueError as e:
@@ -279,24 +257,19 @@ class UserInterface:
 
     def _filter_transactions(self) -> None:
         """Exibe um menu com todas as opções de filtragem, captura a escolha do usuário e a executa"""
-        transaction_filter_submenu = PanelBuilder.build_transaction_filter_submenu()
-        transaction_filter_choices = PanelBuilder.get_transaction_filter_submenu_choices()
+        transaction_filter_submenu = ptbuilder.build_transaction_filter_submenu()
+        transaction_filter_choices = ptbuilder.get_transaction_filter_submenu_choices()
 
         while True:
             self._clear_screen()
-            if self._state_manager.has_active_filter():
-                transaction_list: list[Transaction] = self._state_manager.filtered_list
-            
-            else:
-                transaction_list: list[Transaction] = self._service.get_all_transactions()
-                
+            transaction_list = self._get_transaction_list_for_display()
             if not transaction_list:
                 return
             
             self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
-                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                filter_warning = ptbuilder.build_orientation_panel('Você possui um filtro ativo.')
                 self._console.print(filter_warning)
             self._console.print('\n')
             self._console.print(transaction_filter_submenu, justify='center')
@@ -324,24 +297,18 @@ class UserInterface:
                 self._pause_and_clear()    
 
     def _sort_transactions(self) -> None:
-        transaction_sorter_submenu = PanelBuilder.build_transaction_sorter_submenu()
-        transaction_sorter_choices = PanelBuilder.get_transaction_sorter_submenu_choices()
+        transaction_sorter_submenu = ptbuilder.build_transaction_sorter_submenu()
+        transaction_sorter_choices = ptbuilder.get_transaction_sorter_submenu_choices()
 
         while True:
-            self._clear_screen()
-            if self._state_manager.has_active_filter():
-                transaction_list: list[Transaction] = self._state_manager.filtered_list
-            
-            else:
-                transaction_list: list[Transaction] = self._service.get_all_transactions()
-                
+            transaction_list = self._get_transaction_list_for_display()
             if not transaction_list:
                 return
             
             self._service.update_statistics(transaction_list)
             self._show_all_transactions(transaction_list)
             if self._state_manager.has_active_filter():
-                filter_warning = PanelBuilder.build_orientation_panel('Você possui um filtro ativo.')
+                filter_warning = ptbuilder.build_orientation_panel('Você possui um filtro ativo.')
                 self._console.print(filter_warning)
             self._console.print('\n')
             self._console.print(transaction_sorter_submenu, justify='center')
@@ -364,12 +331,7 @@ class UserInterface:
 
     def _show_report(self) -> None:
         self._clear_screen()
-        if self._state_manager.has_active_filter():
-            transaction_list: list[Transaction] = self._state_manager.filtered_list
-        
-        else:
-            transaction_list: list[Transaction] = self._service.get_all_transactions()
-            
+        transaction_list = self._get_transaction_list_for_display()  
         if not transaction_list:
             return
         
@@ -399,7 +361,7 @@ class UserInterface:
     def _update_category(self, transaction_id: int) -> None:
         orientation_msg = 'Nota: Alterar a categoria de uma transação' \
         ' irá resetar o filtro de transações se houver um ativo.'
-        orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
+        orientation_panel = ptbuilder.build_orientation_panel(orientation_msg)
 
         self._console.print(orientation_panel)
         transaction_type = self._service.get_transaction_type(transaction_id)
@@ -416,8 +378,8 @@ class UserInterface:
 
     # Métodos individuais para as opções de ordenação -----------------------------------------------------------------
     def _sort_by_amount(self, transaction_list : list[Transaction] | None) -> list[Transaction]:
-        sort_order_menu = PanelBuilder.build_transaction_sort_order_submenu()
-        sort_order_choices = PanelBuilder.get_transaction_sort_order_choices()
+        sort_order_menu = ptbuilder.build_transaction_sort_order_submenu()
+        sort_order_choices = ptbuilder.get_transaction_sort_order_choices()
 
         self._console.print(sort_order_menu, justify='center')
         option = PromptPTBR.ask('Digite o número da ordenação desejada', choices=sort_order_choices)
@@ -429,8 +391,8 @@ class UserInterface:
         return self._service.sort_by_amount(order, transaction_list)
 
     def _sort_by_date(self, transaction_list : list[Transaction] | None) -> list[Transaction]:
-        sort_order_menu = PanelBuilder.build_transaction_sort_order_submenu()
-        sort_order_choices = PanelBuilder.get_transaction_sort_order_choices()
+        sort_order_menu = ptbuilder.build_transaction_sort_order_submenu()
+        sort_order_choices = ptbuilder.get_transaction_sort_order_choices()
 
         self._console.print(sort_order_menu, justify='center')
         option = PromptPTBR.ask('Digite o número da ordenação desejada', choices=sort_order_choices)
@@ -442,8 +404,8 @@ class UserInterface:
         return self._service.sort_by_date(order, transaction_list)
 
     def _sort_by_id(self, transaction_list : list[Transaction] | None) -> list[Transaction]:
-        sort_order_menu = PanelBuilder.build_transaction_sort_order_submenu()
-        sort_order_choices = PanelBuilder.get_transaction_sort_order_choices()
+        sort_order_menu = ptbuilder.build_transaction_sort_order_submenu()
+        sort_order_choices = ptbuilder.get_transaction_sort_order_choices()
 
         self._console.print(sort_order_menu, justify='center')
         option = PromptPTBR.ask('Digite o número da ordenação desejada', choices=sort_order_choices)
@@ -457,7 +419,7 @@ class UserInterface:
     # Métodos individuais para as opções de filtragem -----------------------------------------------------------------
     def _filter_by_amount(self, transaction_list: list[Transaction]) -> list[Transaction]:
         orientation_msg = 'Você pode omitir um dos valores abaixos para a filtragem.'
-        orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
+        orientation_panel = ptbuilder.build_orientation_panel(orientation_msg)
 
         self._console.print(orientation_panel)
         start_amount: str = self._console.input('Digite o valor inicial de filtragem: ').strip() or None
@@ -472,10 +434,10 @@ class UserInterface:
     
     def _filter_by_date(self, transaction_list: list[Transaction]) -> list[Transaction]:
         orientation_msg = 'Você pode omitir uma das datas abaixos para a filtragem.'
-        orientation_panel = PanelBuilder.build_orientation_panel(orientation_msg)
+        orientation_panel = ptbuilder.build_orientation_panel(orientation_msg)
         DATE_FORMAT = """[yellow]DD/MM/AAAA
 Exemplo: 01/01/2025[/]"""
-        date_format_panel = PanelBuilder.build_orientation_panel(DATE_FORMAT)
+        date_format_panel = ptbuilder.build_orientation_panel(DATE_FORMAT)
 
         self._console.print('\n')
         self._console.print(date_format_panel)
@@ -486,8 +448,8 @@ Exemplo: 01/01/2025[/]"""
         return self._service.filter_by_date_range(transaction_list, start_date, end_date)
 
     def _filter_by_category(self, transaction_list: list[Transaction]) -> list[Transaction]:
-        all_categories_menu = PanelBuilder.build_all_categories_filter_menu()
-        all_categories_choices = PanelBuilder.get_all_categories_choices()
+        all_categories_menu = ptbuilder.build_all_categories_filter_menu()
+        all_categories_choices = ptbuilder.get_all_categories_choices()
 
         self._console.print('\n')
         self._console.print(all_categories_menu, justify='center')
@@ -519,8 +481,8 @@ Exemplo: 01/01/2025[/]"""
             return amount_str
 
     def _collect_transaction_type(self) -> str:
-        transaction_type_panel: Panel = PanelBuilder.build_transaction_type_menu()
-        transaction_type_choices: list[str] = PanelBuilder.get_transaction_type_choices()
+        transaction_type_panel: Panel = ptbuilder.build_transaction_type_menu()
+        transaction_type_choices: list[str] = ptbuilder.get_transaction_type_choices()
 
         self._console.print('\n')
         self._console.print(transaction_type_panel, justify='center')
@@ -535,7 +497,7 @@ Exemplo: 01/01/2025[/]"""
         DATE_FORMAT = """[yellow]DD/MM/AAAA
 Exemplo: 01/01/2025[/]"""
 
-        date_format_panel = PanelBuilder.build_orientation_panel(DATE_FORMAT)
+        date_format_panel = ptbuilder.build_orientation_panel(DATE_FORMAT)
 
         self._console.print('\n')
         self._console.print(date_format_panel)
@@ -552,8 +514,8 @@ Exemplo: 01/01/2025[/]"""
             return date_str
         
     def _collect_category(self, transaction_type_str: str) -> str | None:
-        category_panel : Panel = PanelBuilder.build_category_menu(transaction_type_str)
-        category_choices: str = PanelBuilder.get_category_choices(transaction_type_str)
+        category_panel : Panel = ptbuilder.build_category_menu(transaction_type_str)
+        category_choices: str = ptbuilder.get_category_choices(transaction_type_str)
                 
         self._console.print('\n')
         self._console.print(category_panel, justify='center')
@@ -574,7 +536,7 @@ Exemplo: 01/01/2025[/]"""
     def _collect_description(self) -> str | None:
         description_note = '[yellow]Nota: Este campo é opcional, pressione enter para pula-lo.[/]'
 
-        description_panel = PanelBuilder.build_orientation_panel(description_note)
+        description_panel = ptbuilder.build_orientation_panel(description_note)
 
         self._console.print('\n')
         self._console.print(description_panel)
@@ -597,8 +559,33 @@ Exemplo: 01/01/2025[/]"""
         return True
 
     # Métodos internos útilitários ------------------------------------------------------------------------------------
+    def _get_transaction_list_for_display(self) -> list[Transaction]:
+            if self._state_manager.has_active_filter():
+                transaction_list = self._state_manager.filtered_list
+            
+            else:
+                transaction_list = self._service.get_all_transactions()
+
+            return transaction_list
+    
+    def _show_all_transactions(self, transaction_list: list[Transaction]) -> list[Transaction]:
+        """Mostra a lista de todas as transações no terminal"""
+        statistics = self._service.get_statistics()
+        transaction_table: Table = ptbuilder.build_transaction_table(transaction_list, statistics)
+
+        self._console.print(Rule('[bold blue]Lista de Transações[/]', style='cyan'))
+        self._console.print('\n')        
+        self._console.print(transaction_table, justify='center')
+
+        return transaction_list
+    
+    def _print_section_title(self, rule_title: str, characters: str = '─') -> None:
+        self._console.print(Rule(f'\n[bold blue]{rule_title}[/]', style='cyan', characters=characters))
+        self._console.print('\n')
+
     def _clear_screen(self):
         os.system('cls')
+        self._console.print('\n')
 
     def _pause_and_clear(self, msg: str='\nPressione enter para voltar...'):
         self._console.input(msg)

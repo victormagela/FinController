@@ -1,11 +1,10 @@
 from datetime import date
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from src.service.transaction_statistics import TransactionStatistics
-import src.service.transaction_formatter as formatter
-from src.ui.panel_table_builder import PanelBuilder, GraphTableBuilder
+import src.ui.formatter as formatter
+import src.ui.panel_table_builder as ptbuilder
 
 class ReportConstructor:
     def __init__(self, statistics: TransactionStatistics, start_date: date, end_date: date):
@@ -18,15 +17,15 @@ class ReportConstructor:
         income_overview_text = self._compose_income_overview_text()
         expense_overview_text = self._compose_expense_overview_text()
 
-        overview_panel = PanelBuilder.build_general_overview_panel(overview_text)
-        income_overview_panel = PanelBuilder.build_income_overview_panel(income_overview_text)
-        expense_overview_panel = PanelBuilder.build_expense_overview_panel(expense_overview_text)
+        overview_panel = ptbuilder.build_general_overview_panel(overview_text)
+        income_overview_panel = ptbuilder.build_income_overview_panel(income_overview_text)
+        expense_overview_panel = ptbuilder.build_expense_overview_panel(expense_overview_text)
 
         income_table_row_content = self._get_income_report_table_content()
-        income_report_table = GraphTableBuilder.build_income_report_table(income_table_row_content)
+        income_report_table = ptbuilder.build_income_report_table(income_table_row_content)
 
         expense_table_row_content = self._get_expense_report_table_content()
-        expense_report_table = GraphTableBuilder.build_expense_report_table(expense_table_row_content)
+        expense_report_table = ptbuilder.build_expense_report_table(expense_table_row_content)
 
         return overview_panel, income_overview_panel, expense_overview_panel, income_report_table, expense_report_table
 
