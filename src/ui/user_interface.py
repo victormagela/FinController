@@ -40,7 +40,7 @@ class UserInterface:
             '1': self._modify_transaction,
             '2': self._filter_transactions,
             '3': self._sort_transactions,
-            '4': self._show_report_wrapper
+            '4': self._show_report
         }
         self._transaction_modification_submenu_dispatch_table: dict[str, Callable[[int], None]] = {
             '1': self._del_transaction,
@@ -362,7 +362,7 @@ class UserInterface:
                 self._console.print(f'[red]{e}[/]')
                 self._pause_and_clear()
 
-    def _show_report_wrapper(self) -> None:
+    def _show_report(self) -> None:
         self._clear_screen()
         if self._state_manager.has_active_filter():
             transaction_list: list[Transaction] = self._state_manager.filtered_list
@@ -376,9 +376,6 @@ class UserInterface:
         statistics = self._service.get_statistics()
         start_date = self._service.get_min_date(transaction_list)
         end_date = self._service.get_max_date(transaction_list)
-        self._show_report(statistics, start_date, end_date)
-
-    def _show_report(self, statistics: TransactionStatistics, start_date: date, end_date: date) -> None:
         report_constructor = ReportConstructor(statistics, start_date, end_date)
         overview_panel, income_overview_panel, expense_overview_panel, income_report_table, expense_report_table \
         = report_constructor.generate_full_report()

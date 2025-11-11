@@ -199,7 +199,7 @@ class PanelBuilder:
             msg,
             box=box.DOUBLE_EDGE,
             title='[bold blue]Relatório Financeiro[/]',
-            style='cyan',
+            border_style='cyan',
             expand=False,
             padding=(1,4)
         )
@@ -210,7 +210,7 @@ class PanelBuilder:
             msg,
             box=box.SQUARE,
             title='[bold blue]Receitas[/]',
-            style='cyan',
+            border_style='cyan',
             expand=False,
             padding=(1,4)
         )
@@ -221,7 +221,7 @@ class PanelBuilder:
             msg,
             box=box.SQUARE,
             title='[bold blue]Despesas[/]',
-            style='cyan',
+            border_style='cyan',
             expand=False,
             padding=(1,4)
         )
@@ -320,11 +320,11 @@ class GraphTableBuilder:
             header_style= 'bold cyan'
         )
 
-        report_table.add_column('Categoria', style='cyan')
-        report_table.add_column('Transações', style='cyan')
-        report_table.add_column('Valor %', style='cyan')
-        report_table.add_column('Contagem %', style='cyan')
-        report_table.add_column('Total', style='cyan')
+        report_table.add_column('Categoria')
+        report_table.add_column('Transações')
+        report_table.add_column('Valor %')
+        report_table.add_column('Contagem %')
+        report_table.add_column('Total')
 
         for content in row_content:
             report_table.add_row(*content)
@@ -339,11 +339,11 @@ class GraphTableBuilder:
             header_style= 'bold cyan'
         )
 
-        report_table.add_column('Categoria', style='cyan')
-        report_table.add_column('Transações', style='cyan')
-        report_table.add_column('Valor %', style='cyan')
-        report_table.add_column('Contagem %', style='cyan')
-        report_table.add_column('Total', style='cyan')
+        report_table.add_column('Categoria')
+        report_table.add_column('Transações')
+        report_table.add_column('Valor %')
+        report_table.add_column('Contagem %')
+        report_table.add_column('Total')
 
         for content in row_content:
             report_table.add_row(*content)

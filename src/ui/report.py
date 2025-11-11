@@ -1,6 +1,7 @@
 from datetime import date
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 from src.service.transaction_statistics import TransactionStatistics
 import src.service.transaction_formatter as formatter
@@ -36,15 +37,16 @@ class ReportConstructor:
         formatted_end_date = formatter.format_date(self._end_date)
         transaction_count = self._statistics.transaction_count
         formatted_balance = formatter.format_currency_for_ptbr(self._statistics.balance)
+        balance_color = '[green]' if self._statistics.balance >= 0 else '[red]'
         return (
-            f'Período: {formatted_start_date} até {formatted_end_date}\n'
-            f'Transações: {transaction_count} | Saldo: {formatted_balance}'
+            f'Período: [cyan]{formatted_start_date}[/] até [cyan]{formatted_end_date}[/]\n'
+            f'Transações: [cyan]{transaction_count}[/] | Saldo: {balance_color}{formatted_balance}[/]'
         )
 
     def _compose_income_overview_text(self) -> str:
         if self._statistics.income_category_with_highest_amount is None \
         and self._statistics.income_category_with_most_transactions is None:
-            return 'Nenhuma receita encontrada'
+            return '[red]Nenhuma receita encontrada[/]'
         
         income_count = self._statistics.income_transaction_count
         total_income = formatter.format_currency_for_ptbr(self._statistics.total_income)
@@ -58,19 +60,19 @@ class ReportConstructor:
             formatter.format_category(self._statistics.income_category_with_most_transactions)
         )
         return (
-            f'Transações: {income_count}\n'
-            f'Total: {total_income}\n'
-            f'Média: {average_income}\n'
-            f'Mediana: {median_income}\n'
-            f'Maior valor: {highest_income_amount}\n'
-            f'Categoria com maior valor: {income_category_with_highest_amount}\n'
-            f'Categoria com maior número de transações: {income_category_with_most_transactions}'
+            f'[cyan]Transações[/]: {income_count}\n'
+            f'[cyan]Total[/]: {total_income}\n'
+            f'[cyan]Média[/]: {average_income}\n'
+            f'[cyan]Mediana[/]: {median_income}\n'
+            f'[cyan]Maior valor[/]: {highest_income_amount}\n'
+            f'[cyan]Categoria com maior valor[/]: {income_category_with_highest_amount}\n'
+            f'[cyan]Categoria com maior número de transações[/]: {income_category_with_most_transactions}'
         )
     
     def _compose_expense_overview_text(self) -> str:
         if self._statistics.expense_category_with_highest_amount is None \
         and self._statistics.expense_category_with_most_transactions is None:
-            return 'Nenhuma receita encontrada'
+            return '[red]Nenhuma receita encontrada[/]'
         
         expense_count = self._statistics.expense_transaction_count
         total_expense = formatter.format_currency_for_ptbr(self._statistics.total_expense)
@@ -84,13 +86,13 @@ class ReportConstructor:
             formatter.format_category(self._statistics.expense_category_with_most_transactions)
         )
         return (
-            f'Transações: {expense_count}\n'
-            f'Total: {total_expense}\n'
-            f'Média: {average_expense}\n'
-            f'Mediana: {median_expense}\n'
-            f'Maior valor: {highest_expense_amount}\n'
-            f'Categoria com maior valor: {expense_category_with_highest_amount}\n'
-            f'Categoria com maior número de transações: {expense_category_with_most_transactions}'
+            f'[cyan]Transações[/]: {expense_count}\n'
+            f'[cyan]Total[/]: {total_expense}\n'
+            f'[cyan]Média[/]: {average_expense}\n'
+            f'[cyan]Mediana[/]: {median_expense}\n'
+            f'[cyan]Maior valor[/]: {highest_expense_amount}\n'
+            f'[cyan]Categoria com maior valor[/]: {expense_category_with_highest_amount}\n'
+            f'[cyan]Categoria com maior número de transações[/]: {expense_category_with_most_transactions}'
         )
     
     def _get_income_report_table_content(self) -> list[list[str]]:
