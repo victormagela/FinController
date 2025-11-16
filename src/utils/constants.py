@@ -44,6 +44,7 @@ TRANSACTION_TYPE_TABLE: dict[str, str] = {
     '2': 'despesa'
 }
 
+# Outras constantes
 DATE_FORMAT = "%d/%m/%Y"
 
 APP_TITLE = """
