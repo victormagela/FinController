@@ -1,6 +1,6 @@
 from datetime import date
 
-from PySide6.QtWidgets import QWidget, QMainWindow, QGridLayout, QPushButton, QTableView
+from PySide6.QtWidgets import QWidget, QMainWindow, QGridLayout, QPushButton, QTableView, QLabel
 
 from src.ui.gui.table_model import TableModel
 from src.models.transaction import Transaction
@@ -68,6 +68,7 @@ class MainWindow(QMainWindow):
 
         self.table = QTableView()
         self.table_model = TableModel()
+        self.no_table_label = QLabel('Nenhuma transação encontrada. Por favor adicione uma para começar.')
 
         self.initUI()
 
@@ -83,15 +84,14 @@ class MainWindow(QMainWindow):
         self.grid_layout.addWidget(self.report_button, 0, 3, 1, 1)
         if self.fake_transactions:
             self.grid_layout.addWidget(self.table, 1, 0, 1, 4)
-        
+            self.table_model.set_transaction_list(self.fake_transactions)
+            self._configure_table()
+            self.table.selectionModel().selectionChanged.connect(self._on_table_selection_changed)
+
         else:
-            ...
+            self.grid_layout.addWidget(self.no_table_label, 1, 0, 1, 4)
 
-        self.table_model.set_transaction_list(self.fake_transactions)
-        self._configure_table()
         self._configure_buttons()
-
-        #self.table.selectionModel.selectionChanged.connect(self._on_table_selection_changed)
 
     def _configure_table(self) -> None:
         self.table.setModel(self.table_model)
