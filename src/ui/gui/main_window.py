@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
         self.report_button = QPushButton('Gerar Relatório')
 
         self.table = QTableView()
-        self.table_model = TableModel(self.fake_transactions)
+        self.table_model = TableModel()
 
         self.initUI()
 
@@ -81,6 +81,44 @@ class MainWindow(QMainWindow):
         self.grid_layout.addWidget(self.edit_button, 0, 1, 1, 1)
         self.grid_layout.addWidget(self.filter_button, 0, 2, 1, 1)
         self.grid_layout.addWidget(self.report_button, 0, 3, 1, 1)
+        if self.fake_transactions:
+            self.grid_layout.addWidget(self.table, 1, 0, 1, 4)
+        
+        else:
+            ...
 
+        self.table_model.set_transaction_list(self.fake_transactions)
+        self._configure_table()
+        self._configure_buttons()
+
+        #self.table.selectionModel.selectionChanged.connect(self._on_table_selection_changed)
+
+    def _configure_table(self) -> None:
         self.table.setModel(self.table_model)
-        self.grid_layout.addWidget(self.table, 1, 0, 1, 4)
+        self.table.setSelectionBehavior(self.table.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(self.table.SelectionMode.SingleSelection)
+        self.table.setEditTriggers(self.table.EditTrigger.NoEditTriggers)
+
+    def _configure_buttons(self) -> None:
+        self.edit_button.setEnabled(False)
+
+        self.add_button.clicked.connect(self._add_transaction)
+        self.edit_button.clicked.connect(self._edit_transaction)
+        self.filter_button.clicked.connect(self._filter_transactions)
+        self.report_button.clicked.connect(self._generate_report)
+
+    def _add_transaction(self) -> None:
+        print('Adicionar transação')
+
+    def _edit_transaction(self) -> None:
+        print('Editar transação')
+
+    def _filter_transactions(self) -> None:
+        print('Filtrar Transações')
+
+    def _generate_report(self) -> None:
+        print('Gerar relatório')
+
+    def _on_table_selection_changed(self) -> None:
+        if self.table.selectionModel().hasSelection():
+            self.edit_button.setEnabled(self.table.selectionModel().hasSelection())

@@ -1,6 +1,7 @@
 from typing import Any, Callable
 
 from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex, QObject
+from PySide6.QtWidgets import QTableView
 
 from src.models.transaction import Transaction
 import src.ui.formatter as formatter
