@@ -3,6 +3,7 @@ from datetime import date
 from PySide6.QtWidgets import QWidget, QMainWindow, QGridLayout, QPushButton, QTableView, QLabel
 
 from src.ui.gui.table_model import TableModel
+from src.ui.gui.new_transaction_window import NewTransactionWindow
 from src.models.transaction import Transaction
 from src.models.enums import TransactionType, IncomeCategory, ExpenseCategory
 
@@ -108,7 +109,9 @@ class MainWindow(QMainWindow):
         self.report_button.clicked.connect(self._generate_report)
 
     def _add_transaction(self) -> None:
-        print('Adicionar transação')
+        new_transaction_window = NewTransactionWindow()
+        new_transaction_window.exec()
+        print('janela de nova transação fechada...')
 
     def _edit_transaction(self) -> None:
         print('Editar transação')
@@ -120,5 +123,4 @@ class MainWindow(QMainWindow):
         print('Gerar relatório')
 
     def _on_table_selection_changed(self) -> None:
-        if self.table.selectionModel().hasSelection():
-            self.edit_button.setEnabled(self.table.selectionModel().hasSelection())
+        self.edit_button.setEnabled(self.table.selectionModel().hasSelection())
