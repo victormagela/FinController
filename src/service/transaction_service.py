@@ -20,13 +20,11 @@ class TransactionService:
         self.statistics = TransactionStatisticsCalculator(self._manager.get_all_transactions())
 
     # Métodos básicos de lista ----------------------------------------------------------------------------------------
-    def add_transaction(self, str_dict: dict[str, str]) -> Transaction:
+    def add_transaction(self, str_dict: dict[str, str]) -> None:
         parsed_transaction_dict: ParsedTransaction = parser.parse_from_user(str_dict)
 
-        transaction: Transaction = Transaction.from_user_input(parsed_transaction_dict)
+        transaction = Transaction.from_user_input(parsed_transaction_dict)
         self._manager.add_transaction(transaction)
-
-        return transaction
     
     def get_all_transactions(self) -> list[Transaction]:
         return self._manager.get_all_transactions()

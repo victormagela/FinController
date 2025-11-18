@@ -1,8 +1,11 @@
+from collections.abc import Iterable
+from datetime import date
+
 from PySide6.QtWidgets import QDialog, QLineEdit, QLabel, QPushButton, QGridLayout, QComboBox
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 
-from src.utils.constants import TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE
+from src.utils.constants import TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, DATE_FORMAT
 
 
 class NewTransactionWindow(QDialog):
@@ -40,14 +43,12 @@ class NewTransactionWindow(QDialog):
     def initUI(self) -> None:
         self.setWindowTitle('Nova Transação')
 
-        self._config_combobox()
         self._config_lines()
+        self._config_button()
+        self._config_combobox()
         self._config_layout()
 
         self.setLayout(self._grid_layout)
-
-        self._type_combobox.currentTextChanged.connect(self._on_type_selection_changed)
-        self._confirm_button.clicked.connect(self._add_transaction)
 
     def _config_lines(self) -> None:
         self._amount_line.setTextMargins(5, 2, 5, 2)
@@ -58,15 +59,27 @@ class NewTransactionWindow(QDialog):
         self._date_line.setPlaceholderText('dd/mm/aaaa')
         self._description_line.setPlaceholderText('ex: Almoço de domingo')
 
+        self._date_line.setText(date.today().strftime(DATE_FORMAT))
+
         self._amount_line.setValidator(QRegularExpressionValidator(QRegularExpression(self.AMOUNT_PATTERN)))
         self._date_line.setValidator(QRegularExpressionValidator(QRegularExpression(self.DATE_PATTERN)))
+
+        self._amount_line.textChanged.connect(self._on_necessary_fields_filled)
+        self._date_line.textChanged.connect(self._on_necessary_fields_filled)
 
     def _config_combobox(self) -> None:
         self._type_combobox.addItems(TRANSACTION_TYPE_TABLE.values())
         self._category_combobox.addItems(self._get_category_combobox_items())
 
+        self._type_combobox.currentTextChanged.connect(self._on_type_selection_changed)
+
     def _config_labels(self) -> None:
         ...
+
+    def _config_button(self) -> None:
+        self._confirm_button.setEnabled(False)
+
+        self._confirm_button.clicked.connect(self._add_transaction)
 
     def _config_layout(self) -> None:
         self._grid_layout.addWidget(self._amount_label, 0, 0)
@@ -82,12 +95,18 @@ class NewTransactionWindow(QDialog):
 
         self._grid_layout.addWidget(self._confirm_button, 6, 1)
 
-    def _add_transaction(self) -> None:
-        transaction_type = self._type_combobox.currentText()
+    def _add_transaction(self) -> Iterable[str]:
+        str_dict = {}
+        str_dict['amount'] = self._amount_line.text()
+        str_dict['transaction_type'] = self._type_combobox.currentText()
+        str_dict['transaction_date'] = self._date_line.text()
+        str_dict['category'] = self._category_combobox.currentText()
+        str_dict['description'] = self._description_line.text()
+
         print(f'Adicionando transação: \n'
             f'valor: {self._amount_line.text()}\n'
             f'data: {self._date_line.text()}\n'
-            f'tipo: {transaction_type}\n'
+            f'tipo: {self._type_combobox.currentText()}\n'
             f'categoria: {self._category_combobox.currentText()}\n'
             f'descrição: {self._description_line.text()}\n'
         )
@@ -96,9 +115,18 @@ class NewTransactionWindow(QDialog):
         self._date_line.clear()
         self._description_line.clear()
 
+        return str_dict
+
     def _on_type_selection_changed(self) -> None:
         self._category_combobox.clear()
         self._category_combobox.addItems(self._get_category_combobox_items())
+
+    def _on_necessary_fields_filled(self) -> None:
+        if self._amount_line.hasAcceptableInput() and self._date_line.hasAcceptableInput():
+            self._confirm_button.setEnabled(True)
+
+        else:
+            self._confirm_button.setEnabled(False)
 
     def _get_category_combobox_items(self) -> dict[str, str]:
         if self._type_combobox.currentText() == 'receita':
