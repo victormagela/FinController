@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from datetime import date
+from copy import deepcopy
 
 from PySide6.QtWidgets import QDialog, QLineEdit, QLabel, QPushButton, QGridLayout, QComboBox
 from PySide6.QtCore import QRegularExpression
@@ -7,7 +8,7 @@ from PySide6.QtGui import QRegularExpressionValidator
 
 from src.utils.constants import TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, DATE_FORMAT
 
-
+ 
 class NewTransactionWindow(QDialog):
     # Padrões regex para validação de formato de dados
     AMOUNT_PATTERN: str = r'^\d+([.,]\d{1,2})?$'
@@ -15,6 +16,7 @@ class NewTransactionWindow(QDialog):
 
     def __init__(self, parent = None):
         super().__init__(parent)
+        self._user_input_list: list[dict[str, str]] = []
 
         self._grid_layout = QGridLayout()
         
@@ -38,6 +40,10 @@ class NewTransactionWindow(QDialog):
         self._description_label = QLabel('Descrição:')
 
         self.initUI()
+
+    @property
+    def user_input_list(self):
+        return deepcopy(self._user_input_list)
 
 
     def initUI(self) -> None:
@@ -95,7 +101,7 @@ class NewTransactionWindow(QDialog):
 
         self._grid_layout.addWidget(self._confirm_button, 6, 1)
 
-    def _add_transaction(self) -> Iterable[str]:
+    def _add_transaction(self) -> None:
         str_dict = {}
         str_dict['amount'] = self._amount_line.text()
         str_dict['transaction_type'] = self._type_combobox.currentText()
@@ -115,7 +121,7 @@ class NewTransactionWindow(QDialog):
         self._date_line.clear()
         self._description_line.clear()
 
-        return str_dict
+        self._user_input_list.append(str_dict)
 
     def _on_type_selection_changed(self) -> None:
         self._category_combobox.clear()
@@ -128,7 +134,7 @@ class NewTransactionWindow(QDialog):
         else:
             self._confirm_button.setEnabled(False)
 
-    def _get_category_combobox_items(self) -> dict[str, str]:
+    def _get_category_combobox_items(self) -> Iterable[str]:
         if self._type_combobox.currentText() == 'receita':
             return INCOME_CATEGORY_TABLE.values()
 

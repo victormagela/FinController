@@ -111,6 +111,9 @@ class MainWindow(QMainWindow):
     def _add_transaction(self) -> None:
         new_transaction_window = NewTransactionWindow()
         new_transaction_window.exec()
+        input_list = new_transaction_window.user_input_list
+        for user_input in input_list:
+            print(f'Passando {user_input} ao service...')
         print('janela de nova transação fechada...')
 
     def _edit_transaction(self) -> None:
