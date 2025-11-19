@@ -1,6 +1,6 @@
-from datetime import date
-
-from PySide6.QtWidgets import QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QLabel
+from PySide6.QtWidgets import (
+    QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QLabel, QHeaderView
+)
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.new_transaction_window import NewTransactionWindow
@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
 
     def initUI(self) -> None:
         self.setWindowTitle('FinController')
-        self.setFixedSize(630, 400)
+        self.setFixedSize(610, 400)
 
         self.setCentralWidget(self.central_window)
         self.central_window.setLayout(self.main_layout)
@@ -56,7 +56,16 @@ class MainWindow(QMainWindow):
             self.main_layout.addWidget(self.no_table_label)
 
     def _configure_table(self) -> None:
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+
         self.table.setModel(self.table_model)
+        self.table.setColumnWidth(0, 40)   # Id
+        self.table.setColumnWidth(1, 80)   # Data
+        self.table.setColumnWidth(2, 80)   # Tipo
+        self.table.setColumnWidth(3, 100)  # Categoria
+        self.table.setColumnWidth(4, 200)  # Descrição
+        self.table.setColumnWidth(5, 80)   # Valor
         self.table.setSelectionBehavior(self.table.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(self.table.SelectionMode.SingleSelection)
         self.table.setEditTriggers(self.table.EditTrigger.NoEditTriggers)
