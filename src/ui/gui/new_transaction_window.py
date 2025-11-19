@@ -2,23 +2,22 @@ from collections.abc import Iterable
 from datetime import date
 from copy import deepcopy
 
-from PySide6.QtWidgets import QDialog, QLineEdit, QLabel, QPushButton, QGridLayout, QComboBox
+from PySide6.QtWidgets import QDialog, QLineEdit, QLabel, QPushButton, QVBoxLayout, QFormLayout, QComboBox
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 
-from src.utils.constants import TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, DATE_FORMAT
+from src.utils.constants import (
+    TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, DATE_FORMAT, AMOUNT_PATTERN, DATE_PATTERN
+)
 
  
 class NewTransactionWindow(QDialog):
-    # Padrões regex para validação de formato de dados
-    AMOUNT_PATTERN: str = r'^\d+([.,]\d{1,2})?$'
-    DATE_PATTERN: str = r'^\d{2}/\d{2}/\d{4}$'
-
     def __init__(self, parent = None):
         super().__init__(parent)
         self._user_input_list: list[dict[str, str]] = []
 
-        self._grid_layout = QGridLayout()
+        self._main_layout = QVBoxLayout()
+        self._form_layout = QFormLayout()
         
         # Line Edits --------------------------------------------------------------------------------------------------
         self._amount_line = QLineEdit()
@@ -54,7 +53,7 @@ class NewTransactionWindow(QDialog):
         self._config_combobox()
         self._config_layout()
 
-        self.setLayout(self._grid_layout)
+        self.setLayout(self._main_layout)
 
     def _config_lines(self) -> None:
         self._amount_line.setTextMargins(5, 2, 5, 2)
@@ -67,8 +66,8 @@ class NewTransactionWindow(QDialog):
 
         self._date_line.setText(date.today().strftime(DATE_FORMAT))
 
-        self._amount_line.setValidator(QRegularExpressionValidator(QRegularExpression(self.AMOUNT_PATTERN)))
-        self._date_line.setValidator(QRegularExpressionValidator(QRegularExpression(self.DATE_PATTERN)))
+        self._amount_line.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
+        self._date_line.setValidator(QRegularExpressionValidator(QRegularExpression(DATE_PATTERN)))
 
         self._amount_line.textChanged.connect(self._on_necessary_fields_filled)
         self._date_line.textChanged.connect(self._on_necessary_fields_filled)
@@ -88,18 +87,15 @@ class NewTransactionWindow(QDialog):
         self._confirm_button.clicked.connect(self._add_transaction)
 
     def _config_layout(self) -> None:
-        self._grid_layout.addWidget(self._amount_label, 0, 0)
-        self._grid_layout.addWidget(self._amount_line, 0, 1)
-        self._grid_layout.addWidget(self._date_label, 1, 0)
-        self._grid_layout.addWidget(self._date_line, 1, 1)
-        self._grid_layout.addWidget(self._type_label, 2, 0)
-        self._grid_layout.addWidget(self._type_combobox, 2, 1)
-        self._grid_layout.addWidget(self._category_label, 3, 0)
-        self._grid_layout.addWidget(self._category_combobox, 3, 1)
-        self._grid_layout.addWidget(self._description_label, 4, 0)
-        self._grid_layout.addWidget(self._description_line, 4, 1)
+        self._form_layout.addRow(self._amount_label, self._amount_line)
+        self._form_layout.addRow(self._date_label, self._date_line)
+        self._form_layout.addRow(self._type_label, self._type_combobox)
+        self._form_layout.addRow(self._category_label, self._category_combobox)
+        self._form_layout.addRow(self._description_label, self._description_line)
 
-        self._grid_layout.addWidget(self._confirm_button, 6, 1)
+        self._main_layout.addWidget(self._confirm_button)
+
+        self._main_layout.addLayout(self._form_layout)
 
     def _add_transaction(self) -> None:
         str_dict = {}

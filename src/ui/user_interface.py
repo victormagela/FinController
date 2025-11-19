@@ -11,7 +11,7 @@ from rich.text import Text
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
 from src.utils.constants import (
-    INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE, APP_TITLE
+    INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE, APP_TITLE, DATE_PATTERN, AMOUNT_PATTERN
 )
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
@@ -22,10 +22,6 @@ import  src.ui.panel_table_builder as ptbuilder
 
 class UserInterface:
     """Interface CLI do Programa"""
-    # Padrões regex para validação de formato de dados
-    AMOUNT_PATTERN: str = r'^\d+([.,]\d{1,2})?$'
-    DATE_PATTERN: str = r'^\d{2}/\d{2}/\d{4}$'
-
     def __init__(self):
         self._service: TransactionService = TransactionService()
         self._console: Console = Console()
@@ -547,13 +543,13 @@ Exemplo: 01/01/2025[/]"""
 
     # Métodos internos de validação por regex -------------------------------------------------------------------------
     def _validate_amount_format(self, amount_str: str) -> bool:
-        if not bool(re.fullmatch(self.AMOUNT_PATTERN, amount_str)):
+        if not bool(re.fullmatch(AMOUNT_PATTERN, amount_str)):
             return False
         
         return True
     
     def _validate_date_format(self, date_str: str) -> bool:
-        if not bool(re.fullmatch(self.DATE_PATTERN, date_str)):
+        if not bool(re.fullmatch(DATE_PATTERN, date_str)):
             return False
         
         return True
