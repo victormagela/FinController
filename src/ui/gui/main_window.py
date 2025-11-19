@@ -1,12 +1,10 @@
 from datetime import date
 
-from PySide6.QtWidgets import QWidget, QMainWindow, QGridLayout, QPushButton, QTableView, QLabel
+from PySide6.QtWidgets import QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QLabel
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.new_transaction_window import NewTransactionWindow
 from src.service.transaction_service import TransactionService
-from src.models.transaction import Transaction
-from src.models.enums import TransactionType, IncomeCategory, ExpenseCategory
 
 
 class MainWindow(QMainWindow):
@@ -16,7 +14,8 @@ class MainWindow(QMainWindow):
 
         self.central_window = QWidget()
 
-        self.grid_layout = QGridLayout()
+        self.main_layout = QVBoxLayout()
+        self.button_layout = QHBoxLayout()
 
         self.add_button = QPushButton('Adicionar Transação')
         self.edit_button = QPushButton('Editar Transação')
@@ -31,9 +30,10 @@ class MainWindow(QMainWindow):
 
     def initUI(self) -> None:
         self.setWindowTitle('FinController')
+        self.setFixedSize(630, 400)
 
         self.setCentralWidget(self.central_window)
-        self.central_window.setLayout(self.grid_layout)
+        self.central_window.setLayout(self.main_layout)
 
         self._configure_layout()
 
@@ -42,21 +42,18 @@ class MainWindow(QMainWindow):
         self._configure_buttons()
 
     def _configure_layout(self) -> None:
-        self.grid_layout.addWidget(self.add_button, 0, 0, 1, 1)
-        self.grid_layout.addWidget(self.edit_button, 0, 1, 1, 1)
-        self.grid_layout.addWidget(self.filter_button, 0, 2, 1, 1)
-        self.grid_layout.addWidget(self.report_button, 0, 3, 1, 1)
+        self.button_layout.addWidget(self.add_button)
+        self.button_layout.addWidget(self.edit_button)
+        self.button_layout.addWidget(self.filter_button)
+        self.button_layout.addWidget(self.report_button)
+        self.main_layout.addLayout(self.button_layout)
+
         if self._service.get_all_transactions():
-            self.grid_layout.addWidget(self.table, 1, 0, 1, 4)
+            self.main_layout.addWidget(self.table)
             self.table_model.set_transaction_list(self._service.get_all_transactions())
         
         else:
-            self.grid_layout.addWidget(self.no_table_label, 1, 0, 1, 4)
-
-        self.grid_layout.setRowStretch(0, 0)
-        self.grid_layout.setRowStretch(1, 1)
-        self.grid_layout.setColumnStretch(0, 0)
-        self.grid_layout.setColumnStretch(1, 1)
+            self.main_layout.addWidget(self.no_table_label)
 
     def _configure_table(self) -> None:
         self.table.setModel(self.table_model)
@@ -81,10 +78,10 @@ class MainWindow(QMainWindow):
             self._service.add_transaction(user_input)
         
         if input_list:
-            self.grid_layout.removeWidget(self.no_table_label)
+            self.main_layout.removeWidget(self.no_table_label)
             self.no_table_label.hide()
             self.table_model.set_transaction_list(self._service.get_all_transactions())
-            self.grid_layout.addWidget(self.table, 1, 0, 1, 4)
+            self.main_layout.addWidget(self.table)
 
     def _edit_transaction(self) -> None:
         print('Editar transação')
