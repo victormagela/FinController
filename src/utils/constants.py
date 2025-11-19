@@ -61,3 +61,4 @@ APP_TITLE = """
 # Padrões regex para validação de formato de dados
 AMOUNT_PATTERN: str = r'^\d+([.,]\d{1,2})?$'
 DATE_PATTERN: str = r'^\d{2}/\d{2}/\d{4}$'
+DESCRIPTION_PATTERN : str = r'^.{0,90}$'

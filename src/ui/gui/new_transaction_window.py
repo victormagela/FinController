@@ -7,7 +7,8 @@ from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 
 from src.utils.constants import (
-    TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, DATE_FORMAT, AMOUNT_PATTERN, DATE_PATTERN
+    TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, DATE_FORMAT, AMOUNT_PATTERN, DATE_PATTERN,
+    DESCRIPTION_PATTERN
 )
 
  
@@ -62,12 +63,13 @@ class NewTransactionWindow(QDialog):
 
         self._amount_line.setPlaceholderText('ex: 1.234,50 ou 1234.50')
         self._date_line.setPlaceholderText('dd/mm/aaaa')
-        self._description_line.setPlaceholderText('ex: Almoço de domingo')
+        self._description_line.setPlaceholderText('Campo opcional')
 
         self._date_line.setText(date.today().strftime(DATE_FORMAT))
 
         self._amount_line.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
         self._date_line.setValidator(QRegularExpressionValidator(QRegularExpression(DATE_PATTERN)))
+        self._description_line.setValidator(QRegularExpressionValidator(QRegularExpression(DESCRIPTION_PATTERN)))
 
         self._amount_line.textChanged.connect(self._on_necessary_fields_filled)
         self._date_line.textChanged.connect(self._on_necessary_fields_filled)

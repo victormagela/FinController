@@ -11,7 +11,8 @@ from rich.text import Text
 from src.service.transaction_service import TransactionService
 from src.utils.utils import PromptPTBR, IntPromptPTBR
 from src.utils.constants import (
-    INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE, APP_TITLE, DATE_PATTERN, AMOUNT_PATTERN
+    INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, ALL_CATEGORIES_TABLE, APP_TITLE, DATE_PATTERN, AMOUNT_PATTERN,
+    DESCRIPTION_PATTERN
 )
 from src.models.transaction import Transaction
 from src.ui.ui_state_manager import UIStateManager
@@ -534,12 +535,17 @@ Exemplo: 01/01/2025[/]"""
 
         description_panel = ptbuilder.build_orientation_panel(description_note)
 
-        self._console.print('\n')
-        self._console.print(description_panel)
-        description = self._console.input('Digite uma descrição para a transação: ')
-        self._console.print('\n')
+        while True:
+            self._console.print('\n')
+            self._console.print(description_panel)
+            description = self._console.input('Digite uma descrição para a transação: ')
+            self._console.print('\n')
 
-        return description if description else None
+            if not self._validate_description_format(description):
+                self._console.print('[red]A descrição deve conter no máximo 90 caracteres.[/]')
+                continue
+
+            return description if description else None
 
     # Métodos internos de validação por regex -------------------------------------------------------------------------
     def _validate_amount_format(self, amount_str: str) -> bool:
@@ -550,6 +556,12 @@ Exemplo: 01/01/2025[/]"""
     
     def _validate_date_format(self, date_str: str) -> bool:
         if not bool(re.fullmatch(DATE_PATTERN, date_str)):
+            return False
+        
+        return True
+    
+    def _validate_description_format(self, description: str) -> bool:
+        if not bool(re.fullmatch(DESCRIPTION_PATTERN, description)):
             return False
         
         return True

@@ -32,6 +32,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('FinController')
         self.setFixedSize(610, 400)
 
+        self.status_bar = self.statusBar()
+
         self.setCentralWidget(self.central_window)
         self.central_window.setLayout(self.main_layout)
 
@@ -102,4 +104,24 @@ class MainWindow(QMainWindow):
         print('Gerar relatório')
 
     def _on_table_selection_changed(self, *_args) -> None:
+        self._enable_edit_button()
+
+        self._update_statusbar_msg()
+
+    def _enable_edit_button(self) -> None:
         self.edit_button.setEnabled(self.table.selectionModel().hasSelection())
+
+    def _update_statusbar_msg(self) -> None:
+        selected_rows = self.table.selectionModel().selectedRows()
+        row = selected_rows[0].row()
+        model = self.table.model()
+
+        values = []
+        for col in range(model.columnCount()):
+            index = model.index(row, col)
+            data = model.data(index)
+            if isinstance(data, str):
+                values.append(data)
+
+        text = ' '.join(values)
+        self.status_bar.showMessage(text)
