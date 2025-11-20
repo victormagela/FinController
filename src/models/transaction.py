@@ -78,8 +78,8 @@ class Transaction():
                 f"description={self._description!r})")
 
     def __str__(self):
-        return (f'ID {self._id}| {self.transaction_type_str} de {self.amount_formatted_brazil} em '
-        f'{self.transaction_date_str}.| {self._category}| {self._description}')
+        return (f'ID {self._id} | Tipo {self._transaction_type} | Valor {self._amount} | '
+        f'Data {self._transaction_date} | Categoria {self._category} | Descrição {self._description}')
     
     # Métodos de classe -----------------------------------------------------------------------------------------------
     @classmethod
@@ -163,9 +163,9 @@ class Transaction():
     
     @description.setter
     def description(self, description: str) -> None:
-        if not isinstance(description, str) or 3 > len(description) or len(description) > 140:
+        if not isinstance(description, str) or len(description) > 90:
             raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres' \
-            ' e no máximo 140 caracteres')
+            ' e no máximo 90 caracteres')
         
         self._description = description
 
@@ -174,16 +174,16 @@ class Transaction():
         return self._id
 
     # Métodos para validação interna ----------------------------------------------------------------------------------
-    def _validate_type(self, transaction_type) -> None:
+    def _validate_type(self, transaction_type: TransactionType) -> None:
         if not isinstance(transaction_type, TransactionType):
             raise ValueError(f'{transaction_type} não é um tipo válido!')
 
-    def _validate_amount(self, amount) -> None:
+    def _validate_amount(self, amount: float | int) -> None:
         """Verifica se um valor é válido e maior que zero"""
         if not isinstance(amount, (float, int)) or not amount > 0:
             raise ValueError(f'{amount} não é um valor válido!')
         
-    def _validate_date(self, transaction_date) -> None:
+    def _validate_date(self, transaction_date: date) -> None:
         """Verifica se uma data não é futura e se é válida"""
         if not isinstance(transaction_date, date) or transaction_date > date.today() :
             raise ValueError(f'{transaction_date} não é uma data válida!')
@@ -222,8 +222,3 @@ class Transaction():
             return ExpenseCategory.OTHERS
         
         return category
-    
-
-if __name__ == '__main__':
-    t1 = Transaction(10.50, TransactionType.INCOME, date(2025, 10, 14))
-    print(t1.__dict__)

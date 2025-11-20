@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (
-    QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QLabel, QHeaderView
+    QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QLabel, QHeaderView, QMessageBox
 )
+from PySide6.QtCore import Qt
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.new_transaction_window import NewTransactionWindow
@@ -85,8 +86,15 @@ class MainWindow(QMainWindow):
         new_transaction_window = NewTransactionWindow()
         new_transaction_window.exec()
         input_list = new_transaction_window.user_input_list
-        for user_input in input_list:
-            self._service.add_transaction(user_input)
+        try:
+            for user_input in input_list:
+                self._service.add_transaction(user_input)
+        except ValueError as e:
+            error_window = QMessageBox()
+            error_window.setText(f'{e}')
+            error_window.setIcon(QMessageBox.Icon.Critical)
+            error_window.setWindowTitle('Erro!')
+            error_window.exec()
         
         if input_list:
             self.main_layout.removeWidget(self.no_table_label)

@@ -96,7 +96,7 @@ def to_valid_transaction_date(transaction_date_str: str, date_format) -> date:
         transaction_date_str_normalized = transaction_date_str.strip()
         transaction_date = datetime.strptime(transaction_date_str_normalized, date_format).date()
     except ValueError:
-        raise ValueError(f'{transaction_date_str} não é uma data válida! Siga o formato DD/MM/AAAA.')
+        raise ValueError(f'{transaction_date_str} não é uma data válida!')
     
     return transaction_date
 
