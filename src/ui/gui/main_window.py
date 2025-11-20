@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QLabel, QHeaderView, QMessageBox
 )
-from PySide6.QtCore import Qt
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.new_transaction_window import NewTransactionWindow
