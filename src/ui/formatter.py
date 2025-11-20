@@ -25,3 +25,6 @@ def format_date(transaction_date: date) -> str:
 
 def format_category(category: IncomeCategory | ExpenseCategory) -> str:
     return category.value.capitalize()
+
+def capitalize_dict_values(dict: dict[str, str]) -> dict[str, str]:
+    return {key:value.capitalize() for key, value in dict.items()}

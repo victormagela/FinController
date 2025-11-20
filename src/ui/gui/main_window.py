@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.ui.gui.table_model import TableModel
-from src.ui.gui.new_transaction_window import NewTransactionWindow
+from src.ui.gui.transaction_form_window import TransactionFormWindow, DialogMode
 from src.service.transaction_service import TransactionService
 
 
@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
         self.report_button.clicked.connect(self._generate_report)
 
     def _add_transaction(self) -> None:
-        new_transaction_window = NewTransactionWindow()
+        new_transaction_window = TransactionFormWindow(mode=DialogMode.CREATEMODE)
         new_transaction_window.exec()
         input_list = new_transaction_window.user_input_list
         try:
@@ -102,7 +102,25 @@ class MainWindow(QMainWindow):
             self.main_layout.addWidget(self.table)
 
     def _edit_transaction(self) -> None:
-        print('Editar transação')
+        selected_rows = self.table.selectionModel().selectedRows()
+        transaction_id = selected_rows[0].data()
+        transaction = self._service.get_transaction_by_id(transaction_id)
+        edit_transaction_window = TransactionFormWindow(mode=DialogMode.EDITMODE, transaction=transaction)
+        edit_transaction_window.exec()
+        input_dict = edit_transaction_window.user_input_dict
+        if input_dict:
+            try:
+                self._service.update_transaction_category(transaction_id, input_dict.get('category'))
+                self._service.update_transaction_description(transaction_id, input_dict.get('description'))
+            except ValueError as e:
+                error_window = QMessageBox()
+                error_window.setText(f'{e}')
+                error_window.setIcon(QMessageBox.Icon.Critical)
+                error_window.setWindowTitle('Erro!')
+                error_window.exec()
+
+            self.table_model.set_transaction_list(self._service.get_all_transactions())
+            self.edit_button.setEnabled(False)
 
     def _filter_transactions(self) -> None:
         print('Filtrar Transações')
