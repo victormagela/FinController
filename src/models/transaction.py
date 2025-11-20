@@ -162,12 +162,15 @@ class Transaction():
         return self._description
     
     @description.setter
-    def description(self, description: str) -> None:
-        if not isinstance(description, str) or len(description) > 90:
-            raise ValueError('Descrição inválida! A descrição deve conter no mínimo 3 caracteres' \
-            ' e no máximo 90 caracteres')
+    def description(self, description: str | None) -> None:
+        if description is not None:
+            if len(description) > 90:
+                raise ValueError('Descrição inválida! A descrição deve conter no máximo 90 caracteres')
         
-        self._description = description
+            self._description = description
+
+        self._description = 'Descrição não adicionada'
+        return
 
     @property
     def id(self):

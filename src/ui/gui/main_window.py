@@ -100,6 +100,7 @@ class MainWindow(QMainWindow):
             self.no_table_label.hide()
             self.table_model.set_transaction_list(self._service.get_all_transactions())
             self.main_layout.addWidget(self.table)
+            self.status_bar.showMessage('Transação adicionada com sucesso!')
 
     def _edit_transaction(self) -> None:
         selected_rows = self.table.selectionModel().selectedRows()
@@ -121,6 +122,7 @@ class MainWindow(QMainWindow):
 
             self.table_model.set_transaction_list(self._service.get_all_transactions())
             self.edit_button.setEnabled(False)
+            self.status_bar.showMessage('Transação modificada com sucesso!')
 
     def _filter_transactions(self) -> None:
         print('Filtrar Transações')

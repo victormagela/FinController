@@ -96,8 +96,8 @@ class TransactionFormWindow(QDialog):
             self._date_line.setText(formatter.format_date(self._transaction.transaction_date))
             self._description_line.setText(self._transaction.description)
 
-            self._amount_line.setReadOnly(True)
-            self._date_line.setReadOnly(True)
+            self._amount_line.setDisabled(True)
+            self._date_line.setDisabled(True)
 
             
         self._amount_line.setTextMargins(5, 2, 5, 2)
@@ -153,15 +153,9 @@ class TransactionFormWindow(QDialog):
         str_dict['transaction_type'] = self._type_combobox.currentText()
         str_dict['transaction_date'] = self._date_line.text()
         str_dict['category'] = self._category_combobox.currentText()
-        str_dict['description'] = self._description_line.text()
-
-        print(f'Adicionando transação: \n'
-            f'valor: {self._amount_line.text()}\n'
-            f'data: {self._date_line.text()}\n'
-            f'tipo: {self._type_combobox.currentText()}\n'
-            f'categoria: {self._category_combobox.currentText()}\n'
-            f'descrição: {self._description_line.text()}\n'
-        )
+        description = self._description_line.text().strip()
+        if description:
+            str_dict['description'] = description
 
         self._amount_line.clear()
         self._date_line.clear()
@@ -172,12 +166,9 @@ class TransactionFormWindow(QDialog):
     def _edit_transaction(self) -> None:
         str_dict = {}
         str_dict['category'] = self._category_combobox.currentText()
-        str_dict['description'] = self._description_line.text()
-
-        print((f'Editando Transação: \n'
-            f'nova categoria: {self._category_combobox.currentText()}\n'
-            f'nova descrição: {self._description_line.text()}'
-        ))
+        description = self._description_line.text().strip()
+        if description:
+            str_dict['description'] = description
 
         self._user_input_dict.update(str_dict)
         self.destroy()
