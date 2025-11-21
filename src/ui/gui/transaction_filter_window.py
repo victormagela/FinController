@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, QComboBox, QRadioButton, QLabel, QWidget, QPushButton, QHBoxLayout, QVBoxLayout
@@ -13,6 +14,19 @@ from src.utils.constants import (
 import src.ui.formatter as formatter
 
 
+@dataclass
+class FilterCriteria:
+    min_amount: str | None = None
+    max_amount: str | None = None
+
+    start_date: str | None = None
+    end_date: str | None = None
+
+    type: str | None = None
+
+    category: str | None = None
+
+
 class TransactionFilterWindow(QDialog):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -23,8 +37,8 @@ class TransactionFilterWindow(QDialog):
         self._buttons_layout = QHBoxLayout()
 
         # Line Edits --------------------------------------------------------------------------------------------------
-        self._initial_amount = QLineEdit()
-        self._end_amount = QLineEdit()
+        self._min_amount = QLineEdit()
+        self._max_amount = QLineEdit()
 
         self._start_date = QLineEdit()
         self._end_date = QLineEdit()
@@ -45,8 +59,8 @@ class TransactionFilterWindow(QDialog):
         self._reset_button = QPushButton("Resetar Filtros")
 
         # Labels ------------------------------------------------------------------------------------------------------
-        self._initial_amount_label = QLabel("Valor Inicial: ")
-        self._end_amount_label = QLabel("Valor Final: ")
+        self._min_amount_label = QLabel("Valor Inicial: ")
+        self._max_amount_label = QLabel("Valor Final: ")
 
         self._start_date_label = QLabel("De: ")
         self._end_date_label = QLabel("Até:  ")
@@ -68,18 +82,18 @@ class TransactionFilterWindow(QDialog):
         self.setLayout(self._main_layout)
 
     def _config_lines(self) -> None:
-        self._initial_amount.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
-        self._end_amount.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
+        self._min_amount.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
+        self._max_amount.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
         self._start_date.setValidator(QRegularExpressionValidator(QRegularExpression(DATE_PATTERN)))
         self._end_date.setValidator(QRegularExpressionValidator(QRegularExpression(DATE_PATTERN)))
 
-        self._initial_amount.setTextMargins(5, 2, 5, 2)
-        self._end_amount.setTextMargins(5, 2, 5, 2)
+        self._min_amount.setTextMargins(5, 2, 5, 2)
+        self._max_amount.setTextMargins(5, 2, 5, 2)
         self._start_date.setTextMargins(5, 2, 5, 2)
         self._end_date.setTextMargins(5, 2, 5, 2)
 
-        self._initial_amount.setPlaceholderText('ex: 1.234,50 ou 1234.50')
-        self._end_amount.setPlaceholderText('ex: 1.234,50 ou 1234.50')
+        self._min_amount.setPlaceholderText('ex: 1.234,50 ou 1234.50')
+        self._max_amount.setPlaceholderText('ex: 1.234,50 ou 1234.50')
         self._start_date.setPlaceholderText('dd/mm/aaaa')
         self._end_date.setPlaceholderText('dd/mm/aaaa')
 
@@ -100,8 +114,8 @@ class TransactionFilterWindow(QDialog):
         ...
 
     def _config_layout(self):
-        self._form_layout.addRow(self._initial_amount_label, self._initial_amount)
-        self._form_layout.addRow(self._end_amount_label, self._end_amount)
+        self._form_layout.addRow(self._min_amount_label, self._min_amount)
+        self._form_layout.addRow(self._max_amount_label, self._max_amount)
         
         self._form_layout.addRow(self._start_date_label, self._start_date)
         self._form_layout.addRow(self._end_date_label, self._end_date)
