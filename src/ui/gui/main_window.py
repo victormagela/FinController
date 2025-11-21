@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import TransactionFormWindow, DialogMode
+from src.ui.gui.transaction_filter_window import TransactionFilterWindow
 from src.service.transaction_service import TransactionService
 from src.models.transaction import Transaction
 
@@ -151,7 +152,8 @@ class MainWindow(QMainWindow):
             return
 
     def _filter_transactions(self) -> None:
-        print('Filtrar Transações')
+        filter_window = TransactionFilterWindow()
+        filter_window.exec()
 
     def _generate_report(self) -> None:
         print('Gerar relatório')
