@@ -78,7 +78,7 @@ class Transaction():
                 f"description={self._description!r})")
 
     def __str__(self):
-        return (f'ID {self._id} | Tipo {self._transaction_type} | Valor {self._amount} | '
+        return (f'ID {self._id} | Tipo {self._transaction_type.value} | Valor {self._amount} | '
         f'Data {self._transaction_date} | Categoria {self._category} | Descrição {self._description}')
     
     # Métodos de classe -----------------------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ class Transaction():
         return self._category
     
     @category.setter
-    def category(self, new_category: IncomeCategory | ExpenseCategory | None=None) -> None:
+    def category(self, new_category: IncomeCategory | ExpenseCategory | None = None) -> None:
         if new_category is None:
             new_category = IncomeCategory.OTHERS if self._transaction_type == TransactionType.INCOME \
             else ExpenseCategory.OTHERS

@@ -95,10 +95,7 @@ class MainWindow(QMainWindow):
             for user_input in input_list:
                 self._service.add_transaction(user_input)
         except ValueError as e:
-            error_window = QMessageBox()
-            error_window.setText(f'{e}')
-            error_window.setIcon(QMessageBox.Icon.Critical)
-            error_window.setWindowTitle('Erro!')
+            error_window = self._configure_error_window(e)
             error_window.exec()
         
         if input_list:
@@ -121,10 +118,7 @@ class MainWindow(QMainWindow):
                 self._service.update_transaction_category(transaction_id, input_dict.get('category'))
                 self._service.update_transaction_description(transaction_id, input_dict.get('description'))
             except ValueError as e:
-                error_window = QMessageBox()
-                error_window.setText(f'{e}')
-                error_window.setIcon(QMessageBox.Icon.Critical)
-                error_window.setWindowTitle('Erro!')
+                error_window = self._configure_error_window(e)
                 error_window.exec()
 
             self.table_model.set_transaction_list(self._service.get_all_transactions())
@@ -144,10 +138,14 @@ class MainWindow(QMainWindow):
         confirmation = confirmation_window.exec()
         
         if confirmation == QMessageBox.StandardButton.Yes:
-            self._service.del_transaction(transaction_id)
-            self.table_model.set_transaction_list(self._service.get_all_transactions())
-            self._disable_buttons()
-            self.status_bar.showMessage('Transação excluída com sucesso!')
+            try:
+                self._service.del_transaction(transaction_id)
+                self.table_model.set_transaction_list(self._service.get_all_transactions())
+                self._disable_buttons()
+                self.status_bar.showMessage('Transação excluída com sucesso!')
+            except ValueError as e:
+                error_window = self._configure_error_window(e)
+                error_window.exec()
         
         else:
             return
@@ -166,6 +164,14 @@ class MainWindow(QMainWindow):
     def _disable_buttons(self) -> None:
         self.edit_button.setEnabled(False)
         self.delete_button.setEnabled(False)
+
+    def _configure_error_window(self, error) -> QMessageBox:
+        error_window = QMessageBox()
+        error_window.setText(f'{error}')
+        error_window.setIcon(QMessageBox.Icon.Critical)
+        error_window.setWindowTitle('Erro!')
+
+        return error_window
 
     # Slots utilitários -----------------------------------------------------------------------------------------------
     def _on_table_selection_changed(self, *_args) -> None:
