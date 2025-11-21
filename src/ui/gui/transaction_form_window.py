@@ -116,7 +116,6 @@ class TransactionFormWindow(QDialog):
             self._category_combobox.addItems(self._get_category_combobox_items())
 
         else:
-            print(formatter.format_transaction_type(self._transaction.transaction_type))
             self._type_combobox.setCurrentText(formatter.format_transaction_type(self._transaction.transaction_type))
             self._type_combobox.setDisabled(True)
 

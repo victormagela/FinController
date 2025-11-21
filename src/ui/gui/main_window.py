@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import TransactionFormWindow, DialogMode
 from src.service.transaction_service import TransactionService
+from src.models.transaction import Transaction
 
 
 class MainWindow(QMainWindow):
@@ -19,6 +20,7 @@ class MainWindow(QMainWindow):
 
         self.add_button = QPushButton('Adicionar Transação')
         self.edit_button = QPushButton('Editar Transação')
+        self.delete_button = QPushButton('Excluir Transação')
         self.filter_button = QPushButton('Filtrar/Ordernar Transações')
         self.report_button = QPushButton('Gerar Relatório')
 
@@ -46,6 +48,7 @@ class MainWindow(QMainWindow):
     def _configure_layout(self) -> None:
         self.button_layout.addWidget(self.add_button)
         self.button_layout.addWidget(self.edit_button)
+        self.button_layout.addWidget(self.delete_button)
         self.button_layout.addWidget(self.filter_button)
         self.button_layout.addWidget(self.report_button)
         self.main_layout.addLayout(self.button_layout)
@@ -75,12 +78,15 @@ class MainWindow(QMainWindow):
 
     def _configure_buttons(self) -> None:
         self.edit_button.setEnabled(False)
+        self.delete_button.setEnabled(False)
 
         self.add_button.clicked.connect(self._add_transaction)
         self.edit_button.clicked.connect(self._edit_transaction)
+        self.delete_button.clicked.connect(self._delete_transaction)
         self.filter_button.clicked.connect(self._filter_transactions)
         self.report_button.clicked.connect(self._generate_report)
 
+    # Slots principais ------------------------------------------------------------------------------------------------
     def _add_transaction(self) -> None:
         new_transaction_window = TransactionFormWindow(mode=DialogMode.CREATEMODE)
         new_transaction_window.exec()
@@ -103,12 +109,13 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage('Transação adicionada com sucesso!')
 
     def _edit_transaction(self) -> None:
-        selected_rows = self.table.selectionModel().selectedRows()
-        transaction_id = selected_rows[0].data()
+        transaction_id = self.get_transaction_id()
         transaction = self._service.get_transaction_by_id(transaction_id)
+
         edit_transaction_window = TransactionFormWindow(mode=DialogMode.EDITMODE, transaction=transaction)
         edit_transaction_window.exec()
         input_dict = edit_transaction_window.user_input_dict
+
         if input_dict:
             try:
                 self._service.update_transaction_category(transaction_id, input_dict.get('category'))
@@ -121,8 +128,29 @@ class MainWindow(QMainWindow):
                 error_window.exec()
 
             self.table_model.set_transaction_list(self._service.get_all_transactions())
-            self.edit_button.setEnabled(False)
+            self._disable_buttons()
             self.status_bar.showMessage('Transação modificada com sucesso!')
+
+    def _delete_transaction(self) -> None:
+        transaction_id = self.get_transaction_id()
+
+        confirmation_window = QMessageBox()
+        confirmation_window.setText('Tem certeza que deseja excluir esta transação?')
+        confirmation_window.setIcon(QMessageBox.Icon.Question)
+        confirmation_window.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        confirmation_window.setButtonText(QMessageBox.StandardButton.Yes, 'Sim')
+        confirmation_window.setButtonText(QMessageBox.StandardButton.No, 'Não')
+
+        confirmation = confirmation_window.exec()
+        
+        if confirmation == QMessageBox.StandardButton.Yes:
+            self._service.del_transaction(transaction_id)
+            self.table_model.set_transaction_list(self._service.get_all_transactions())
+            self._disable_buttons()
+            self.status_bar.showMessage('Transação excluída com sucesso!')
+        
+        else:
+            return
 
     def _filter_transactions(self) -> None:
         print('Filtrar Transações')
@@ -130,13 +158,27 @@ class MainWindow(QMainWindow):
     def _generate_report(self) -> None:
         print('Gerar relatório')
 
+    # Métodos utilitários ---------------------------------------------------------------------------------------------
+    def get_transaction_id(self) -> Transaction:
+        selected_rows = self.table.selectionModel().selectedRows()
+        return selected_rows[0].data()
+    
+    def _disable_buttons(self) -> None:
+        self.edit_button.setEnabled(False)
+        self.delete_button.setEnabled(False)
+
+    # Slots utilitários -----------------------------------------------------------------------------------------------
     def _on_table_selection_changed(self, *_args) -> None:
         self._enable_edit_button()
+        self._enable_delete_button()
 
         self._update_statusbar_msg()
 
     def _enable_edit_button(self) -> None:
         self.edit_button.setEnabled(self.table.selectionModel().hasSelection())
+
+    def _enable_delete_button(self) -> None:
+        self.delete_button.setEnabled(self.table.selectionModel().hasSelection())
 
     def _update_statusbar_msg(self) -> None:
         selected_rows = self.table.selectionModel().selectedRows()
