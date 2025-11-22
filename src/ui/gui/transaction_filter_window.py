@@ -2,7 +2,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from PySide6.QtWidgets import (
-    QDialog, QFormLayout, QLineEdit, QComboBox, QRadioButton, QLabel, QWidget, QPushButton, QHBoxLayout, QVBoxLayout
+    QDialog, QFormLayout, QLineEdit, QComboBox, QRadioButton, QLabel, QWidget, QPushButton, QHBoxLayout, QVBoxLayout,
+    QGroupBox, QButtonGroup
 )
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
@@ -37,6 +38,13 @@ class TransactionFilterWindow(QDialog):
         self._main_layout = QVBoxLayout()
         self._form_layout = QFormLayout()
         self._buttons_layout = QHBoxLayout()
+        self._order_criteria_layout = QVBoxLayout()
+        self._order_layout = QVBoxLayout()
+        self._ordenation_layout = QHBoxLayout()
+
+        # Group boxes -------------------------------------------------------------------------------------------------
+        self._order_criteria_box = QGroupBox('Ordenar por: ')
+        self._order_box = QGroupBox('Direção: ')
 
         # Line Edits --------------------------------------------------------------------------------------------------
         self._min_amount = QLineEdit()
@@ -50,15 +58,15 @@ class TransactionFilterWindow(QDialog):
         self._category_combobox = QComboBox()
 
         # Buttons -----------------------------------------------------------------------------------------------------
-        self._amount_order_button = QRadioButton()
-        self._date_order_button = QRadioButton()
-        self._id_order_button = QRadioButton()
+        self._amount_order_button = QRadioButton('Valor')
+        self._date_order_button = QRadioButton('Data')
+        self._id_order_button = QRadioButton('ID')
         
-        self._ascending_button = QRadioButton()
-        self._descending_button = QRadioButton()
+        self._ascending_button = QRadioButton('Crescente')
+        self._descending_button = QRadioButton('Decrescente')
         
-        self._confirm_button = QPushButton("Confirmar Filtros")
-        self._reset_button = QPushButton("Resetar Filtros")
+        self._confirm_button = QPushButton("Confirmar")
+        self._reset_button = QPushButton("Limpar Filtros")
 
         # Labels ------------------------------------------------------------------------------------------------------
         self._min_amount_label = QLabel("Valor Inicial: ")
@@ -133,8 +141,23 @@ class TransactionFilterWindow(QDialog):
         self._buttons_layout.addWidget(self._confirm_button)
         self._buttons_layout.addWidget(self._reset_button)
 
+        self._order_criteria_layout.addWidget(self._id_order_button)
+        self._order_criteria_layout.addWidget(self._amount_order_button)
+        self._order_criteria_layout.addWidget(self._date_order_button)
+
+        self._order_layout.addWidget(self._ascending_button)
+        self._order_layout.addWidget(self._descending_button)
+
+        self._order_criteria_box.setLayout(self._order_criteria_layout)
+        
+        self._order_box.setLayout(self._order_layout)
+
+        self._ordenation_layout.addWidget(self._order_criteria_box)
+        self._ordenation_layout.addWidget(self._order_box)
+
         self._main_layout.addLayout(self._buttons_layout)
         self._main_layout.addLayout(self._form_layout)
+        self._main_layout.addLayout(self._ordenation_layout)
 
     # Métodos utilitários e slots -------------------------------------------------------------------------------------
     def _on_confirm_button_clicked(self) -> None:
