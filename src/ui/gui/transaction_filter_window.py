@@ -46,6 +46,10 @@ class TransactionFilterWindow(QDialog):
         self._order_criteria_box = QGroupBox('Ordenar por: ')
         self._order_box = QGroupBox('Direção: ')
 
+        # Group buttons -----------------------------------------------------------------------------------------------
+        self._order_criteria_group = QButtonGroup()
+        self._order_group = QButtonGroup()
+
         # Line Edits --------------------------------------------------------------------------------------------------
         self._min_amount = QLineEdit()
         self._max_amount = QLineEdit()
@@ -123,6 +127,13 @@ class TransactionFilterWindow(QDialog):
     def _config_buttons(self) -> None:
         self._confirm_button.clicked.connect(self._on_confirm_button_clicked)
         self._reset_button.clicked.connect(self._on_reset_button_clicked)
+
+        self._order_criteria_group.addButton(self._id_order_button)
+        self._order_criteria_group.addButton(self._amount_order_button)
+        self._order_criteria_group.addButton(self._date_order_button)
+
+        self._order_group.addButton(self._ascending_button)
+        self._order_group.addButton(self._descending_button)
 
     def _config_labels(self) -> None:
         ...
