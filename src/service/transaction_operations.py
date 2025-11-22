@@ -53,6 +53,7 @@ def sort_by_id(
         
      return sorted(transaction_list, key=lambda transaction: transaction.id, reverse=reverse)
 
+# Métodos para buscar os maiores e menores valores --------------------------------------------------------------------
 def get_min_date(transaction_list: list[Transaction]) -> date:
     date_list = [transaction.transaction_date for transaction in transaction_list]
     return min(date_list)
@@ -60,3 +61,11 @@ def get_min_date(transaction_list: list[Transaction]) -> date:
 def get_max_date(transaction_list: list[Transaction]) -> date:
     date_list = [transaction.transaction_date for transaction in transaction_list]
     return max(date_list)
+
+def get_min_amount(transaction_list: list[Transaction]) -> int | float:
+    amount_list = [transaction.amount for transaction in transaction_list]
+    return min(amount_list)
+
+def get_max_amount(transaction_list: list[Transaction]) -> int | float:
+    amount_list = [transaction.amount for transaction in transaction_list]
+    return max(amount_list)

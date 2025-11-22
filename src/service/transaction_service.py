@@ -88,10 +88,10 @@ class TransactionService:
         (usando date.min ou date.max conforme apropriado)"""
         parsed_start_date: date = date.min
         parsed_end_date: date = date.max
-        if start_date:
+        if start_date and isinstance(start_date, str):
             parsed_start_date = parser.to_valid_transaction_date(start_date, DATE_FORMAT)
 
-        if end_date:
+        if end_date and isinstance(end_date, str):
             parsed_end_date = parser.to_valid_transaction_date(end_date, DATE_FORMAT)
 
         return operations.filter_by_date_range(transaction_list, parsed_start_date, parsed_end_date) 
@@ -154,3 +154,10 @@ class TransactionService:
     
     def get_max_date(self, transaction_list: list[Transaction]) -> date:
         return operations.get_max_date(transaction_list)
+    
+    # Métodos que retornam os menores e maiores valores ---------------------------------------------------------------
+    def get_min_amount(self, transaction_list: list[Transaction]) -> int | float:
+        return operations.get_min_amount(transaction_list)
+    
+    def get_max_amount(self, transaction_list: list[Transaction]) -> int | float:
+        return operations.get_max_amount(transaction_list)

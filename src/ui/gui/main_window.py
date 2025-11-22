@@ -153,7 +153,29 @@ class MainWindow(QMainWindow):
 
     def _filter_transactions(self) -> None:
         filter_window = TransactionFilterWindow()
-        filter_window.exec()
+        result = filter_window.exec()
+
+        if result == TransactionFilterWindow.DialogCode.Accepted:
+            criteria = filter_window.criteria
+            transaction_list = self._service.get_all_transactions()
+
+            if criteria.min_amount is not None or criteria.max_amount is not None:
+                transaction_list = self._service.filter_by_amount_range(
+                    transaction_list, criteria.min_amount, criteria.max_amount
+                )
+            
+            if criteria.start_date is not None or criteria.end_date is not None:
+                transaction_list = self._service.filter_by_date_range(
+                    transaction_list, criteria.start_date, criteria.end_date
+                )
+
+            if criteria.type is not None:
+                transaction_list = self._service.filter_by_type(criteria.type, transaction_list)
+
+            if criteria.category is not None:
+                transaction_list = self._service.filter_by_category(criteria.category, transaction_list)
+
+            self.table_model.set_transaction_list(transaction_list)
 
     def _generate_report(self) -> None:
         print('Gerar relatório')

@@ -31,6 +31,8 @@ class TransactionFilterWindow(QDialog):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
 
+        self._criteria = FilterCriteria()
+
         # Layouts -----------------------------------------------------------------------------------------------------
         self._main_layout = QVBoxLayout()
         self._form_layout = QFormLayout()
@@ -70,6 +72,10 @@ class TransactionFilterWindow(QDialog):
         self._category_label = QLabel("Categoria: ")
 
         self.initUI()
+
+    @property
+    def criteria(self) -> FilterCriteria:
+        return self._criteria
     
     def initUI(self) -> None:
         self.setWindowTitle('Filtrar/Ordenar Transações')
@@ -132,7 +138,17 @@ class TransactionFilterWindow(QDialog):
 
     # Métodos utilitários e slots -------------------------------------------------------------------------------------
     def _on_confirm_button_clicked(self) -> None:
-        print('Confirmando filtros')
+        self._criteria.min_amount = self._min_amount.text() or None
+        self._criteria.max_amount = self._max_amount.text() or None
+
+        self._criteria.start_date = self._start_date.text() or None
+        self._criteria.end_date = self._end_date.text() or None
+
+        self._criteria.type = self._type_combobox.currentText() or None
+
+        self._criteria.category = self._category_combobox.currentText() or None
+
+        self.accept()
 
     def _on_reset_button_clicked(self) -> None:
         print('Resetando filtros')
