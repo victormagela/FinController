@@ -129,11 +129,11 @@ class TransactionFormWindow(QDialog):
         if mode == DialogMode.CREATEMODE:
             self._confirm_button.setEnabled(False)
             self._confirm_button.setText('Adicionar Transação')
-            self._confirm_button.clicked.connect(self._add_transaction)
+            self._confirm_button.clicked.connect(self._on_add_transaction_clicked)
 
         else:
             self._confirm_button.setText('Editar Transação')
-            self._confirm_button.clicked.connect(self._edit_transaction)
+            self._confirm_button.clicked.connect(self._on_edit_transaction_clicked)
 
     def _config_layout(self) -> None:
         self._form_layout.addRow(self._amount_label, self._amount_line)
@@ -146,7 +146,8 @@ class TransactionFormWindow(QDialog):
 
         self._main_layout.addLayout(self._form_layout)
 
-    def _add_transaction(self) -> None:
+    # Slots -----------------------------------------------------------------------------------------------------------
+    def _on_add_transaction_clicked(self) -> None:
         str_dict = {}
         str_dict['amount'] = self._amount_line.text()
         str_dict['transaction_type'] = self._type_combobox.currentText()
@@ -162,7 +163,7 @@ class TransactionFormWindow(QDialog):
 
         self._user_input_list.append(str_dict)
 
-    def _edit_transaction(self) -> None:
+    def _on_edit_transaction_clicked(self) -> None:
         str_dict = {}
         str_dict['category'] = self._category_combobox.currentText()
         description = self._description_line.text().strip()

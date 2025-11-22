@@ -81,14 +81,14 @@ class MainWindow(QMainWindow):
         self.edit_button.setEnabled(False)
         self.delete_button.setEnabled(False)
 
-        self.add_button.clicked.connect(self._add_transaction)
-        self.edit_button.clicked.connect(self._edit_transaction)
-        self.delete_button.clicked.connect(self._delete_transaction)
-        self.filter_button.clicked.connect(self._filter_transactions)
-        self.report_button.clicked.connect(self._generate_report)
+        self.add_button.clicked.connect(self._on_add_transaction_clicked)
+        self.edit_button.clicked.connect(self._on_edit_transaction_clicked)
+        self.delete_button.clicked.connect(self._on_delete_transaction_clicked)
+        self.filter_button.clicked.connect(self._on_filter_transactions_clicked)
+        self.report_button.clicked.connect(self._on_generate_report_clicked)
 
     # Slots principais ------------------------------------------------------------------------------------------------
-    def _add_transaction(self) -> None:
+    def _on_add_transaction_clicked(self) -> None:
         new_transaction_window = TransactionFormWindow(mode=DialogMode.CREATEMODE)
         new_transaction_window.exec()
         input_list = new_transaction_window.user_input_list
@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
             self.main_layout.addWidget(self.table)
             self.status_bar.showMessage('Transação adicionada com sucesso!')
 
-    def _edit_transaction(self) -> None:
+    def _on_edit_transaction_clicked(self) -> None:
         transaction_id = self.get_transaction_id()
         transaction = self._service.get_transaction_by_id(transaction_id)
 
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
             self._disable_buttons()
             self.status_bar.showMessage('Transação modificada com sucesso!')
 
-    def _delete_transaction(self) -> None:
+    def _on_delete_transaction_clicked(self) -> None:
         transaction_id = self.get_transaction_id()
 
         confirmation_window = QMessageBox()
@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         else:
             return
 
-    def _filter_transactions(self) -> None:
+    def _on_filter_transactions_clicked(self) -> None:
         filter_window = TransactionFilterWindow()
         result = filter_window.exec()
 
@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
 
             self.table_model.set_transaction_list(transaction_list)
 
-    def _generate_report(self) -> None:
+    def _on_generate_report_clicked(self) -> None:
         print('Gerar relatório')
 
     # Métodos utilitários ---------------------------------------------------------------------------------------------
