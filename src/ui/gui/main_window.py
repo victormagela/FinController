@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import TransactionFormWindow, DialogMode
-from src.ui.gui.transaction_filter_window import TransactionFilterWindow
+from src.ui.gui.transaction_filter_window import TransactionFilterWindow, SortingFieldCode, SortingOrderCode
 from src.service.transaction_service import TransactionService
 from src.models.transaction import Transaction
 
@@ -156,24 +156,34 @@ class MainWindow(QMainWindow):
         result = filter_window.exec()
 
         if result == TransactionFilterWindow.DialogCode.Accepted:
-            criteria = filter_window.criteria
+            filter_criteria = filter_window.filter_criteria
+            sorting_criteria = filter_window.sorting_criteria
             transaction_list = self._service.get_all_transactions()
 
-            if criteria.min_amount is not None or criteria.max_amount is not None:
+            if filter_criteria.min_amount is not None or filter_criteria.max_amount is not None:
                 transaction_list = self._service.filter_by_amount_range(
-                    transaction_list, criteria.min_amount, criteria.max_amount
+                    transaction_list, filter_criteria.min_amount, filter_criteria.max_amount
                 )
             
-            if criteria.start_date is not None or criteria.end_date is not None:
+            if filter_criteria.start_date is not None or filter_criteria.end_date is not None:
                 transaction_list = self._service.filter_by_date_range(
-                    transaction_list, criteria.start_date, criteria.end_date
+                    transaction_list, filter_criteria.start_date, filter_criteria.end_date
                 )
 
-            if criteria.type is not None:
-                transaction_list = self._service.filter_by_type(criteria.type, transaction_list)
+            if filter_criteria.type is not None:
+                transaction_list = self._service.filter_by_type(filter_criteria.type, transaction_list)
 
-            if criteria.category is not None:
-                transaction_list = self._service.filter_by_category(criteria.category, transaction_list)
+            if filter_criteria.category is not None:
+                transaction_list = self._service.filter_by_category(filter_criteria.category, transaction_list)
+
+            if sorting_criteria.field == SortingFieldCode.ID:
+                transaction_list = self._service.sort_by_id(sorting_criteria.order, transaction_list)
+
+            elif sorting_criteria.field == SortingFieldCode.AMOUNT:
+                transaction_list = self._service.sort_by_amount(sorting_criteria.order, transaction_list)
+
+            elif sorting_criteria.field == SortingFieldCode.DATE:
+                transaction_list = self._service.sort_by_date(sorting_criteria.order, transaction_list)
 
             self.table_model.set_transaction_list(transaction_list)
 

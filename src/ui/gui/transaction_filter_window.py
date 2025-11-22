@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, QComboBox, QRadioButton, QLabel, QWidget, QPushButton, QHBoxLayout, QVBoxLayout,
@@ -22,9 +22,9 @@ class SortingFieldCode(Enum):
     DATE = 2
 
 
-class SortingOrderCode(Enum):
-    ASCENDING = 0
-    DESCENDING = 1
+class SortingOrderCode(StrEnum):
+    ASCENDING = 'crescente'
+    DESCENDING = 'decrescente'
 
 
 @dataclass
@@ -53,6 +53,16 @@ class TransactionFilterWindow(QDialog):
         self._filter_criteria = FilterCriteria()
         self._sorting_criteria = SortingCriteria()
 
+        self.field_map: dict[int, SortingFieldCode] = {
+            1: SortingFieldCode.ID,
+            2: SortingFieldCode.AMOUNT,
+            3: SortingFieldCode.DATE
+        }
+        self.order_map: dict[int, SortingOrderCode] = {
+            1: SortingOrderCode.ASCENDING,
+            2: SortingOrderCode.DESCENDING
+        }
+
         # Layouts -----------------------------------------------------------------------------------------------------
         self._main_layout = QVBoxLayout()
         self._form_layout = QFormLayout()
@@ -66,7 +76,7 @@ class TransactionFilterWindow(QDialog):
         self._sort_order_box = QGroupBox('Direção: ')
 
         # Group buttons -----------------------------------------------------------------------------------------------
-        self._sort_criteria_group = QButtonGroup()
+        self._sort_field_group = QButtonGroup()
         self._sort_order_group = QButtonGroup()
 
         # Line Edits --------------------------------------------------------------------------------------------------
@@ -105,7 +115,7 @@ class TransactionFilterWindow(QDialog):
         self.initUI()
 
     @property
-    def criteria(self) -> FilterCriteria:
+    def filter_criteria(self) -> FilterCriteria:
         return self._filter_criteria
     
     @property
@@ -154,12 +164,12 @@ class TransactionFilterWindow(QDialog):
         self._id_sorting_button.setChecked(True)
         self._ascending_button.setChecked(True)
 
-        self._sort_criteria_group.addButton(self._id_sorting_button)
-        self._sort_criteria_group.addButton(self._amount_sorting_button)
-        self._sort_criteria_group.addButton(self._date_sorting_button)
+        self._sort_field_group.addButton(self._id_sorting_button, 1)
+        self._sort_field_group.addButton(self._amount_sorting_button, 2)
+        self._sort_field_group.addButton(self._date_sorting_button, 3)
 
-        self._sort_order_group.addButton(self._ascending_button)
-        self._sort_order_group.addButton(self._descending_button)
+        self._sort_order_group.addButton(self._ascending_button, 1)
+        self._sort_order_group.addButton(self._descending_button, 2)
 
     def _config_labels(self) -> None:
         ...
@@ -198,15 +208,8 @@ class TransactionFilterWindow(QDialog):
 
     # Métodos utilitários e slots -------------------------------------------------------------------------------------
     def _on_confirm_button_clicked(self) -> None:
-        self._filter_criteria.min_amount = self._min_amount.text() or None
-        self._filter_criteria.max_amount = self._max_amount.text() or None
-
-        self._filter_criteria.start_date = self._start_date.text() or None
-        self._filter_criteria.end_date = self._end_date.text() or None
-
-        self._filter_criteria.type = self._type_combobox.currentText() or None
-
-        self._filter_criteria.category = self._category_combobox.currentText() or None
+        self._build_filter_criteria()
+        self._build_sorting_criteria()
 
         self.accept()
 
@@ -228,3 +231,23 @@ class TransactionFilterWindow(QDialog):
             
             case _:
                 return formatter.capitalize_dict_values(ALL_CATEGORIES_TABLE).values()
+            
+    def _build_filter_criteria(self) -> None:
+        self._filter_criteria.min_amount = self._min_amount.text() or None
+        self._filter_criteria.max_amount = self._max_amount.text() or None
+
+        self._filter_criteria.start_date = self._start_date.text() or None
+        self._filter_criteria.end_date = self._end_date.text() or None
+
+        self._filter_criteria.type = self._type_combobox.currentText() or None
+
+        self._filter_criteria.category = self._category_combobox.currentText() or None
+
+    def _build_sorting_criteria(self) -> None:
+        self.sorting_criteria.field = self.field_map.get(
+            self._sort_field_group.checkedId(), self.sorting_criteria.field
+        )
+        self.sorting_criteria.order = self.order_map.get(
+            self._sort_order_group.checkedId(),
+            self.sorting_criteria.order
+        )
