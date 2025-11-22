@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
+from enum import Enum
 
 from PySide6.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, QComboBox, QRadioButton, QLabel, QWidget, QPushButton, QHBoxLayout, QVBoxLayout,
@@ -13,6 +14,23 @@ from src.utils.constants import (
     TRANSACTION_TYPE_TABLE
 )
 import src.ui.formatter as formatter
+
+
+class SortingFieldCode(Enum):
+    ID = 0
+    AMOUNT = 1
+    DATE = 2
+
+
+class SortingOrderCode(Enum):
+    ASCENDING = 0
+    DESCENDING = 1
+
+
+@dataclass
+class SortingCriteria:
+    field: SortingFieldCode = SortingFieldCode.ID
+    order: SortingOrderCode = SortingOrderCode.ASCENDING
 
 
 @dataclass
@@ -32,23 +50,24 @@ class TransactionFilterWindow(QDialog):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
 
-        self._criteria = FilterCriteria()
+        self._filter_criteria = FilterCriteria()
+        self._sorting_criteria = SortingCriteria()
 
         # Layouts -----------------------------------------------------------------------------------------------------
         self._main_layout = QVBoxLayout()
         self._form_layout = QFormLayout()
         self._buttons_layout = QHBoxLayout()
-        self._order_criteria_layout = QVBoxLayout()
-        self._order_layout = QVBoxLayout()
-        self._ordenation_layout = QHBoxLayout()
+        self._sorting_layout = QHBoxLayout()
+        self._sort_criteria_layout = QVBoxLayout()
+        self._sort_order_layout = QVBoxLayout()
 
         # Group boxes -------------------------------------------------------------------------------------------------
-        self._order_criteria_box = QGroupBox('Ordenar por: ')
-        self._order_box = QGroupBox('Direção: ')
+        self._sort_criteria_box = QGroupBox('Ordenar por: ')
+        self._sort_order_box = QGroupBox('Direção: ')
 
         # Group buttons -----------------------------------------------------------------------------------------------
-        self._order_criteria_group = QButtonGroup()
-        self._order_group = QButtonGroup()
+        self._sort_criteria_group = QButtonGroup()
+        self._sort_order_group = QButtonGroup()
 
         # Line Edits --------------------------------------------------------------------------------------------------
         self._min_amount = QLineEdit()
@@ -62,9 +81,9 @@ class TransactionFilterWindow(QDialog):
         self._category_combobox = QComboBox()
 
         # Buttons -----------------------------------------------------------------------------------------------------
-        self._amount_order_button = QRadioButton('Valor')
-        self._date_order_button = QRadioButton('Data')
-        self._id_order_button = QRadioButton('ID')
+        self._amount_sorting_button = QRadioButton('Valor')
+        self._date_sorting_button = QRadioButton('Data')
+        self._id_sorting_button = QRadioButton('ID')
         
         self._ascending_button = QRadioButton('Crescente')
         self._descending_button = QRadioButton('Decrescente')
@@ -87,7 +106,7 @@ class TransactionFilterWindow(QDialog):
 
     @property
     def criteria(self) -> FilterCriteria:
-        return self._criteria
+        return self._filter_criteria
     
     def initUI(self) -> None:
         self.setWindowTitle('Filtrar/Ordenar Transações')
@@ -128,12 +147,15 @@ class TransactionFilterWindow(QDialog):
         self._confirm_button.clicked.connect(self._on_confirm_button_clicked)
         self._reset_button.clicked.connect(self._on_reset_button_clicked)
 
-        self._order_criteria_group.addButton(self._id_order_button)
-        self._order_criteria_group.addButton(self._amount_order_button)
-        self._order_criteria_group.addButton(self._date_order_button)
+        self._id_sorting_button.setChecked(True)
+        self._ascending_button.setChecked(True)
 
-        self._order_group.addButton(self._ascending_button)
-        self._order_group.addButton(self._descending_button)
+        self._sort_criteria_group.addButton(self._id_sorting_button)
+        self._sort_criteria_group.addButton(self._amount_sorting_button)
+        self._sort_criteria_group.addButton(self._date_sorting_button)
+
+        self._sort_order_group.addButton(self._ascending_button)
+        self._sort_order_group.addButton(self._descending_button)
 
     def _config_labels(self) -> None:
         ...
@@ -152,35 +174,35 @@ class TransactionFilterWindow(QDialog):
         self._buttons_layout.addWidget(self._confirm_button)
         self._buttons_layout.addWidget(self._reset_button)
 
-        self._order_criteria_layout.addWidget(self._id_order_button)
-        self._order_criteria_layout.addWidget(self._amount_order_button)
-        self._order_criteria_layout.addWidget(self._date_order_button)
+        self._sort_criteria_layout.addWidget(self._id_sorting_button)
+        self._sort_criteria_layout.addWidget(self._amount_sorting_button)
+        self._sort_criteria_layout.addWidget(self._date_sorting_button)
 
-        self._order_layout.addWidget(self._ascending_button)
-        self._order_layout.addWidget(self._descending_button)
+        self._sort_order_layout.addWidget(self._ascending_button)
+        self._sort_order_layout.addWidget(self._descending_button)
 
-        self._order_criteria_box.setLayout(self._order_criteria_layout)
+        self._sort_criteria_box.setLayout(self._sort_criteria_layout)
         
-        self._order_box.setLayout(self._order_layout)
+        self._sort_order_box.setLayout(self._sort_order_layout)
 
-        self._ordenation_layout.addWidget(self._order_criteria_box)
-        self._ordenation_layout.addWidget(self._order_box)
+        self._sorting_layout.addWidget(self._sort_criteria_box)
+        self._sorting_layout.addWidget(self._sort_order_box)
 
         self._main_layout.addLayout(self._buttons_layout)
         self._main_layout.addLayout(self._form_layout)
-        self._main_layout.addLayout(self._ordenation_layout)
+        self._main_layout.addLayout(self._sorting_layout)
 
     # Métodos utilitários e slots -------------------------------------------------------------------------------------
     def _on_confirm_button_clicked(self) -> None:
-        self._criteria.min_amount = self._min_amount.text() or None
-        self._criteria.max_amount = self._max_amount.text() or None
+        self._filter_criteria.min_amount = self._min_amount.text() or None
+        self._filter_criteria.max_amount = self._max_amount.text() or None
 
-        self._criteria.start_date = self._start_date.text() or None
-        self._criteria.end_date = self._end_date.text() or None
+        self._filter_criteria.start_date = self._start_date.text() or None
+        self._filter_criteria.end_date = self._end_date.text() or None
 
-        self._criteria.type = self._type_combobox.currentText() or None
+        self._filter_criteria.type = self._type_combobox.currentText() or None
 
-        self._criteria.category = self._category_combobox.currentText() or None
+        self._filter_criteria.category = self._category_combobox.currentText() or None
 
         self.accept()
 
