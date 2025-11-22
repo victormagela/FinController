@@ -52,6 +52,7 @@ class TransactionFilterWindow(QDialog):
 
         self._filter_criteria = FilterCriteria()
         self._sorting_criteria = SortingCriteria()
+        self._clear_filters = False
 
         self.field_map: dict[int, SortingFieldCode] = {
             1: SortingFieldCode.ID,
@@ -121,6 +122,10 @@ class TransactionFilterWindow(QDialog):
     @property
     def sorting_criteria(self) -> SortingCriteria:
         return self._sorting_criteria
+    
+    @property
+    def clear_filters(self) -> bool:
+        return self._clear_filters
     
     def initUI(self) -> None:
         self.setWindowTitle('Filtrar/Ordenar Transações')
@@ -214,7 +219,9 @@ class TransactionFilterWindow(QDialog):
         self.accept()
 
     def _on_reset_button_clicked(self) -> None:
-        print('Resetando filtros')
+        self._clear_filters = True
+
+        self.accept()
 
     def _on_type_selection_changed(self, *_args) -> None:
         self._category_combobox.clear()

@@ -156,36 +156,43 @@ class MainWindow(QMainWindow):
         result = filter_window.exec()
 
         if result == TransactionFilterWindow.DialogCode.Accepted:
-            filter_criteria = filter_window.filter_criteria
-            sorting_criteria = filter_window.sorting_criteria
             transaction_list = self._service.get_all_transactions()
-
-            if filter_criteria.min_amount is not None or filter_criteria.max_amount is not None:
-                transaction_list = self._service.filter_by_amount_range(
-                    transaction_list, filter_criteria.min_amount, filter_criteria.max_amount
-                )
             
-            if filter_criteria.start_date is not None or filter_criteria.end_date is not None:
-                transaction_list = self._service.filter_by_date_range(
-                    transaction_list, filter_criteria.start_date, filter_criteria.end_date
-                )
+            if filter_window.clear_filters == True:
+                self.table_model.set_transaction_list(transaction_list)
+                self.status_bar.showMessage('Filtros limpos!')
+            
+            else:
+                filter_criteria = filter_window.filter_criteria
+                sorting_criteria = filter_window.sorting_criteria
 
-            if filter_criteria.type is not None:
-                transaction_list = self._service.filter_by_type(filter_criteria.type, transaction_list)
+                if filter_criteria.min_amount is not None or filter_criteria.max_amount is not None:
+                    transaction_list = self._service.filter_by_amount_range(
+                        transaction_list, filter_criteria.min_amount, filter_criteria.max_amount
+                    )
+                
+                if filter_criteria.start_date is not None or filter_criteria.end_date is not None:
+                    transaction_list = self._service.filter_by_date_range(
+                        transaction_list, filter_criteria.start_date, filter_criteria.end_date
+                    )
 
-            if filter_criteria.category is not None:
-                transaction_list = self._service.filter_by_category(filter_criteria.category, transaction_list)
+                if filter_criteria.type is not None:
+                    transaction_list = self._service.filter_by_type(filter_criteria.type, transaction_list)
 
-            if sorting_criteria.field == SortingFieldCode.ID:
-                transaction_list = self._service.sort_by_id(sorting_criteria.order, transaction_list)
+                if filter_criteria.category is not None:
+                    transaction_list = self._service.filter_by_category(filter_criteria.category, transaction_list)
 
-            elif sorting_criteria.field == SortingFieldCode.AMOUNT:
-                transaction_list = self._service.sort_by_amount(sorting_criteria.order, transaction_list)
+                if sorting_criteria.field == SortingFieldCode.ID:
+                    transaction_list = self._service.sort_by_id(sorting_criteria.order, transaction_list)
 
-            elif sorting_criteria.field == SortingFieldCode.DATE:
-                transaction_list = self._service.sort_by_date(sorting_criteria.order, transaction_list)
+                elif sorting_criteria.field == SortingFieldCode.AMOUNT:
+                    transaction_list = self._service.sort_by_amount(sorting_criteria.order, transaction_list)
 
-            self.table_model.set_transaction_list(transaction_list)
+                elif sorting_criteria.field == SortingFieldCode.DATE:
+                    transaction_list = self._service.sort_by_date(sorting_criteria.order, transaction_list)
+
+                self.table_model.set_transaction_list(transaction_list)
+                self.status_bar.showMessage('Filtros aplicados com sucesso!')
 
     def _on_generate_report_clicked(self) -> None:
         print('Gerar relatório')
