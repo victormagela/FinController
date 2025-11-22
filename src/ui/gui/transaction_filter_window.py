@@ -108,6 +108,10 @@ class TransactionFilterWindow(QDialog):
     def criteria(self) -> FilterCriteria:
         return self._filter_criteria
     
+    @property
+    def sorting_criteria(self) -> SortingCriteria:
+        return self._sorting_criteria
+    
     def initUI(self) -> None:
         self.setWindowTitle('Filtrar/Ordenar Transações')
 
