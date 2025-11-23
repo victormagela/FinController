@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import TransactionFormWindow, DialogMode
-from src.ui.gui.transaction_filter_window import TransactionFilterWindow, SortingFieldCode, SortingOrderCode
+from src.ui.gui.transaction_filter_window import TransactionFilterWindow, SortingFieldCode
 from src.service.transaction_service import TransactionService
 from src.models.transaction import Transaction
 
@@ -219,7 +219,7 @@ class MainWindow(QMainWindow):
         self._enable_edit_button()
         self._enable_delete_button()
 
-        self._update_statusbar_msg()
+        self._update_statusbar_with_row_values()
 
     def _enable_edit_button(self) -> None:
         self.edit_button.setEnabled(self.table.selectionModel().hasSelection())
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
     def _enable_delete_button(self) -> None:
         self.delete_button.setEnabled(self.table.selectionModel().hasSelection())
 
-    def _update_statusbar_msg(self) -> None:
+    def _update_statusbar_with_row_values(self) -> None:
         selected_rows = self.table.selectionModel().selectedRows()
         row = selected_rows[0].row()
         model = self.table.model()

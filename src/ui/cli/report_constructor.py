@@ -4,7 +4,7 @@ from rich.table import Table
 
 from src.service.transaction_statistics import TransactionStatistics
 import src.ui.formatter as formatter
-import src.ui.panel_table_builder as ptbuilder
+import src.ui.cli.panel_table_builder as ptbuilder
 
 class ReportConstructor:
     def __init__(self, statistics: TransactionStatistics, start_date: date, end_date: date):

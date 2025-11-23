@@ -1,7 +1,6 @@
 from typing import Any, Callable
 
 from PySide6.QtCore import QAbstractTableModel, Qt, QModelIndex, QObject
-from PySide6.QtWidgets import QTableView
 
 from src.models.transaction import Transaction
 import src.ui.formatter as formatter
@@ -52,3 +51,6 @@ class TableModel(QAbstractTableModel):
         self.beginResetModel()
         self._transaction_list = new_transaction_list
         self.endResetModel()
+
+    def get_transaction_list(self) -> list[Transaction]:
+        return self._transaction_list.copy()

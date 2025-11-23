@@ -1,4 +1,4 @@
-from src.ui.user_interface import UserInterface
+from src.ui.cli.user_interface import UserInterface
 
 
 def main() -> None:

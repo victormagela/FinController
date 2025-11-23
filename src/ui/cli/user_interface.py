@@ -15,10 +15,10 @@ from src.utils.constants import (
     DESCRIPTION_PATTERN
 )
 from src.models.transaction import Transaction
-from src.ui.ui_state_manager import UIStateManager
+from src.ui.cli.ui_state_manager import UIStateManager
 import src.ui.formatter as formatter
-from src.ui.report_constructor import ReportConstructor
-import  src.ui.panel_table_builder as ptbuilder
+from src.ui.cli.report_constructor import ReportConstructor
+import  src.ui.cli.panel_table_builder as ptbuilder
     
 
 class UserInterface:
