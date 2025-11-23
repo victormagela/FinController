@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import TransactionFormWindow, DialogMode
 from src.ui.gui.transaction_filter_window import TransactionFilterWindow, SortingFieldCode
+from src.ui.gui.report_window import ReportWindow
 from src.service.transaction_service import TransactionService
 from src.models.transaction import Transaction
 
@@ -195,6 +196,8 @@ class MainWindow(QMainWindow):
                 self.status_bar.showMessage('Filtros aplicados com sucesso!')
 
     def _on_generate_report_clicked(self) -> None:
+        report_window = ReportWindow()
+        report_window.exec()
         print('Gerar relatório')
 
     # Métodos utilitários ---------------------------------------------------------------------------------------------
