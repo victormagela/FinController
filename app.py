@@ -14,7 +14,7 @@ from src.ui.gui.main_window import MainWindow
 def get_qss_file_path() -> Path:
     """Retorna o caminho absoluto do arquivo QSS."""
     current_file_path = Path(__file__).parent
-    qss_file_path = current_file_path / "src" / "ui" / "gui" / "styles"
+    qss_file_path = current_file_path / "styles"
     return qss_file_path
 
 

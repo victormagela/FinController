@@ -1,5 +1,7 @@
 """Define a janela principal da aplicação FinController."""
 
+from pathlib import Path
+
 from PySide6.QtWidgets import (
     QWidget,
     QMainWindow,
@@ -13,7 +15,8 @@ from PySide6.QtWidgets import (
     QFrame,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QIcon
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import (
@@ -27,6 +30,15 @@ from src.ui.gui.transaction_filter_window import (
 from src.ui.gui.report_window import ReportWindow
 from src.service.transaction_service import TransactionService
 from src.models.transaction import Transaction
+
+
+ICONS_DIR = Path(__file__).parent.parent.parent.parent / "assets" / "icons"
+ADD_ICON = QIcon(str(ICONS_DIR / "add_fincontroller.svg"))
+EDIT_ICON = QIcon(str(ICONS_DIR / "edit_fincontroller.svg"))
+DELETE_ICON = QIcon(str(ICONS_DIR / "delete_fincontroller.svg"))
+FILTER_ICON = QIcon(str(ICONS_DIR / "filter_fincontroller.svg"))
+REPORT_ICON = QIcon(str(ICONS_DIR / "docs_fincontroller.svg"))
+WINDOW_ICON = QIcon(str(ICONS_DIR / "app_icon_fincontroller.svg"))
 
 
 class MainWindow(QMainWindow):
@@ -47,11 +59,11 @@ class MainWindow(QMainWindow):
         self.button_layout = QHBoxLayout()
 
         # Botões -----------------------------------------------------------------------
-        self.add_button = QPushButton("Adicionar")
-        self.edit_button = QPushButton("Editar")
-        self.delete_button = QPushButton("Excluir")
+        self.add_button = QPushButton("Adicionar\nTransação")
+        self.edit_button = QPushButton("Editar\nTransação")
+        self.delete_button = QPushButton("Excluir\nTransação")
         self.filter_button = QPushButton("Filtrar/Ordernar")
-        self.report_button = QPushButton("Relatório")
+        self.report_button = QPushButton("Gerar\nRelatório")
 
         # Tabela e Modelo --------------------------------------------------------------
         self.table = QTableView()
@@ -67,7 +79,9 @@ class MainWindow(QMainWindow):
 
     def configure_user_interface(self) -> None:
         """Configura a interface gráfica do usuário."""
-        self.setFixedSize(900, 600)
+        self.setWindowTitle("FinController")
+        self.setFixedSize(1200, 800)
+        self.setWindowIcon(WINDOW_ICON)
 
         self.status_bar = self.statusBar()
 
@@ -94,6 +108,7 @@ class MainWindow(QMainWindow):
         )
 
         self.card_layout.addLayout(self.button_layout)
+        self.card_layout.addSpacing(12)
 
         transactions = self._service.get_all_transactions()
         if transactions:
@@ -145,6 +160,18 @@ class MainWindow(QMainWindow):
             self.filter_button.setEnabled(False)
             self.report_button.setEnabled(False)
 
+        self.add_button.setIcon(ADD_ICON)
+        self.edit_button.setIcon(EDIT_ICON)
+        self.delete_button.setIcon(DELETE_ICON)
+        self.filter_button.setIcon(FILTER_ICON)
+        self.report_button.setIcon(REPORT_ICON)
+
+        self.add_button.clicked.connect(self._on_add_transaction_clicked)
+        self.edit_button.clicked.connect(self._on_edit_transaction_clicked)
+        self.delete_button.clicked.connect(self._on_delete_transaction_clicked)
+        self.filter_button.clicked.connect(self._on_filter_transactions_clicked)
+        self.report_button.clicked.connect(self._on_generate_report_clicked)
+
         buttons = (
             self.add_button,
             self.edit_button,
@@ -155,14 +182,9 @@ class MainWindow(QMainWindow):
 
         for button in buttons:
             button.setProperty("class", "mainActionButton")
-            button.setMinimumHeight(40)
+            button.setMinimumHeight(80)
             button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-        self.add_button.clicked.connect(self._on_add_transaction_clicked)
-        self.edit_button.clicked.connect(self._on_edit_transaction_clicked)
-        self.delete_button.clicked.connect(self._on_delete_transaction_clicked)
-        self.filter_button.clicked.connect(self._on_filter_transactions_clicked)
-        self.report_button.clicked.connect(self._on_generate_report_clicked)
+            button.setIconSize(QSize(32, 32))
 
     def _configure_labels(self) -> None:
         self.title_label.setObjectName("titleLabel")
