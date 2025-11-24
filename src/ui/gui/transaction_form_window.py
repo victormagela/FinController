@@ -3,13 +3,26 @@ from datetime import date
 from copy import deepcopy
 from enum import Enum
 
-from PySide6.QtWidgets import QDialog, QLineEdit, QLabel, QPushButton, QVBoxLayout, QFormLayout, QComboBox, QWidget
+from PySide6.QtWidgets import (
+    QDialog,
+    QLineEdit,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QFormLayout,
+    QComboBox,
+    QWidget,
+)
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 
 from src.utils.constants import (
-    TRANSACTION_TYPE_TABLE, INCOME_CATEGORY_TABLE, EXPENSE_CATEGORY_TABLE, AMOUNT_PATTERN, DATE_PATTERN,
-    DESCRIPTION_PATTERN
+    TRANSACTION_TYPE_TABLE,
+    INCOME_CATEGORY_TABLE,
+    EXPENSE_CATEGORY_TABLE,
+    AMOUNT_PATTERN,
+    DATE_PATTERN,
+    DESCRIPTION_PATTERN,
 )
 from src.models.transaction import Transaction
 import src.ui.formatter as formatter
@@ -18,10 +31,14 @@ import src.ui.formatter as formatter
 class DialogMode(Enum):
     CREATEMODE = 0
     EDITMODE = 1
- 
+
+
 class TransactionFormWindow(QDialog):
     def __init__(
-            self, parent: QWidget = None, mode: DialogMode = DialogMode.CREATEMODE, transaction: Transaction = None
+        self,
+        parent: QWidget = None,
+        mode: DialogMode = DialogMode.CREATEMODE,
+        transaction: Transaction = None,
     ):
         super().__init__(parent)
         if transaction is not None:
@@ -29,26 +46,26 @@ class TransactionFormWindow(QDialog):
 
         self._main_layout = QVBoxLayout()
         self._form_layout = QFormLayout()
-        
-        # Line Edits --------------------------------------------------------------------------------------------------
+
+        # Line Edits -------------------------------------------------------------------
         self._amount_line = QLineEdit()
         self._date_line = QLineEdit()
         self._description_line = QLineEdit()
 
-        # Dropdown de categorias e tipos ------------------------------------------------------------------------------
+        # Dropdown de categorias e tipos -----------------------------------------------
         self._type_combobox = QComboBox()
         self._category_combobox = QComboBox()
 
-        # Botão de confirmação ----------------------------------------------------------------------------------------
+        # Botão de confirmação ---------------------------------------------------------
         self._confirm_button = QPushButton()
 
-        # Labels ------------------------------------------------------------------------------------------------------
-        self._amount_label = QLabel('Valor:')
-        self._date_label = QLabel('Data:')
-        self._type_label = QLabel('Tipo:')
-        self._category_label = QLabel('Categoria:')
-        self._description_label = QLabel('Descrição:')
-        
+        # Labels -----------------------------------------------------------------------
+        self._amount_label = QLabel("Valor:")
+        self._date_label = QLabel("Data:")
+        self._type_label = QLabel("Tipo:")
+        self._category_label = QLabel("Categoria:")
+        self._description_label = QLabel("Descrição:")
+
         if mode == DialogMode.CREATEMODE:
             self._user_input_list: list[dict[str, str]] = []
 
@@ -60,18 +77,17 @@ class TransactionFormWindow(QDialog):
     @property
     def user_input_list(self) -> list[dict[str, str]]:
         return deepcopy(self._user_input_list)
-    
+
     @property
     def user_input_dict(self) -> dict[str, str]:
         return deepcopy(self._user_input_dict)
 
-
     def initUI(self, mode) -> None:
         if mode == DialogMode.CREATEMODE:
-            self.setWindowTitle('Nova Transação')
+            self.setWindowTitle("Nova Transação")
 
         if mode == DialogMode.EDITMODE:
-            self.setWindowTitle('Editar Transação')
+            self.setWindowTitle("Editar Transação")
 
         self._config_lines(mode)
         self._config_button(mode)
@@ -81,58 +97,74 @@ class TransactionFormWindow(QDialog):
         self.setLayout(self._main_layout)
 
     def _config_lines(self, mode) -> None:
-        self._description_line.setValidator(QRegularExpressionValidator(QRegularExpression(DESCRIPTION_PATTERN)))
+        self._description_line.setValidator(
+            QRegularExpressionValidator(QRegularExpression(DESCRIPTION_PATTERN))
+        )
         if mode == DialogMode.CREATEMODE:
             self._date_line.setText(formatter.format_date(date.today()))
 
-            self._amount_line.setValidator(QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN)))
-            self._date_line.setValidator(QRegularExpressionValidator(QRegularExpression(DATE_PATTERN)))
+            self._amount_line.setValidator(
+                QRegularExpressionValidator(QRegularExpression(AMOUNT_PATTERN))
+            )
+            self._date_line.setValidator(
+                QRegularExpressionValidator(QRegularExpression(DATE_PATTERN))
+            )
 
             self._amount_line.textChanged.connect(self._on_necessary_fields_filled)
             self._date_line.textChanged.connect(self._on_necessary_fields_filled)
 
         else:
-            self._amount_line.setText(formatter.format_currency_for_ptbr(self._transaction.amount))
-            self._date_line.setText(formatter.format_date(self._transaction.transaction_date))
+            self._amount_line.setText(
+                formatter.format_currency_for_ptbr(self._transaction.amount)
+            )
+            self._date_line.setText(
+                formatter.format_date(self._transaction.transaction_date)
+            )
             self._description_line.setText(self._transaction.description)
 
             self._amount_line.setDisabled(True)
             self._date_line.setDisabled(True)
 
-            
         self._amount_line.setTextMargins(5, 2, 5, 2)
         self._date_line.setTextMargins(5, 2, 5, 2)
         self._description_line.setTextMargins(5, 2, 5, 2)
 
-        self._amount_line.setPlaceholderText('ex: 1.234,50 ou 1234.50')
-        self._date_line.setPlaceholderText('dd/mm/aaaa')
-        self._description_line.setPlaceholderText('Campo opcional')
+        self._amount_line.setPlaceholderText("ex: 1.234,50 ou 1234.50")
+        self._date_line.setPlaceholderText("dd/mm/aaaa")
+        self._description_line.setPlaceholderText("Campo opcional")
 
     def _config_combobox(self, mode) -> None:
-        self._type_combobox.addItems(formatter.capitalize_dict_values(TRANSACTION_TYPE_TABLE).values())
+        self._type_combobox.addItems(
+            formatter.capitalize_dict_values(TRANSACTION_TYPE_TABLE).values()
+        )
 
         if mode == DialogMode.CREATEMODE:
-            self._type_combobox.currentTextChanged.connect(self._on_type_selection_changed)
+            self._type_combobox.currentTextChanged.connect(
+                self._on_type_selection_changed
+            )
             self._category_combobox.addItems(self._get_category_combobox_items())
 
         else:
-            self._type_combobox.setCurrentText(formatter.format_transaction_type(self._transaction.transaction_type))
+            self._type_combobox.setCurrentText(
+                formatter.format_transaction_type(self._transaction.transaction_type)
+            )
             self._type_combobox.setDisabled(True)
 
             self._category_combobox.addItems(self._get_category_combobox_items())
-            self._category_combobox.setCurrentText(formatter.format_category(self._transaction.category))
+            self._category_combobox.setCurrentText(
+                formatter.format_category(self._transaction.category)
+            )
 
-    def _config_labels(self) -> None:
-        ...
+    def _config_labels(self) -> None: ...
 
     def _config_button(self, mode) -> None:
         if mode == DialogMode.CREATEMODE:
             self._confirm_button.setEnabled(False)
-            self._confirm_button.setText('Adicionar Transação')
+            self._confirm_button.setText("Adicionar Transação")
             self._confirm_button.clicked.connect(self._on_add_transaction_clicked)
 
         else:
-            self._confirm_button.setText('Editar Transação')
+            self._confirm_button.setText("Editar Transação")
             self._confirm_button.clicked.connect(self._on_edit_transaction_clicked)
 
     def _config_layout(self) -> None:
@@ -146,16 +178,16 @@ class TransactionFormWindow(QDialog):
 
         self._main_layout.addLayout(self._form_layout)
 
-    # Slots -----------------------------------------------------------------------------------------------------------
+    # Slots ----------------------------------------------------------------------------
     def _on_add_transaction_clicked(self) -> None:
         str_dict = {}
-        str_dict['amount'] = self._amount_line.text()
-        str_dict['transaction_type'] = self._type_combobox.currentText()
-        str_dict['transaction_date'] = self._date_line.text()
-        str_dict['category'] = self._category_combobox.currentText()
+        str_dict["amount"] = self._amount_line.text()
+        str_dict["transaction_type"] = self._type_combobox.currentText()
+        str_dict["transaction_date"] = self._date_line.text()
+        str_dict["category"] = self._category_combobox.currentText()
         description = self._description_line.text().strip()
         if description:
-            str_dict['description'] = description
+            str_dict["description"] = description
 
         self._amount_line.clear()
         self._date_line.clear()
@@ -165,10 +197,10 @@ class TransactionFormWindow(QDialog):
 
     def _on_edit_transaction_clicked(self) -> None:
         str_dict = {}
-        str_dict['category'] = self._category_combobox.currentText()
+        str_dict["category"] = self._category_combobox.currentText()
         description = self._description_line.text().strip()
         if description:
-            str_dict['description'] = description
+            str_dict["description"] = description
 
         self._user_input_dict.update(str_dict)
         self.destroy()
@@ -178,9 +210,11 @@ class TransactionFormWindow(QDialog):
         self._category_combobox.addItems(self._get_category_combobox_items())
 
     def _on_necessary_fields_filled(self, *_args) -> None:
-        if self._amount_line.hasAcceptableInput() and self._date_line.hasAcceptableInput():
+        if (
+            self._amount_line.hasAcceptableInput()
+            and self._date_line.hasAcceptableInput()
+        ):
             self._confirm_button.setEnabled(True)
-
         else:
             self._confirm_button.setEnabled(False)
 

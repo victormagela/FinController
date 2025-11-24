@@ -1,0 +1,99 @@
+/* Fundo geral */
+QMainWindow, QWidget {
+    background-color: #101214;
+    color: #f5f5f5;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 10pt;
+}
+
+/* Card principal da área de conteúdo */
+QFrame#mainCard {
+    background-color: #15181c;
+    border-radius: 12px;
+    border: 1px solid #202428;
+}
+
+/* Título da janela */
+QLabel#titleLabel {
+    background-color: #15181c;
+    font-size: 16pt;
+    font-weight: 600;
+}
+
+/* Botões grandes do topo */
+QPushButton.mainActionButton {
+    background-color: #1f2428;
+    border: 1px solid #262c31;
+    border-radius: 10px;
+    padding: 10px 18px;
+    text-align: left;
+}
+
+QPushButton.mainActionButton:hover {
+    background-color: #252b30;
+}
+
+QPushButton.mainActionButton:pressed {
+    background-color: #1a1f23;
+}
+
+/* Ícone + texto dos botões (deixa o texto um pouco maior) */
+QPushButton.mainActionButton {
+    font-size: 10pt;
+    font-weight: 500;
+}
+
+/* Tabela principal */
+QTableView {
+    background-color: #15181c;
+    alternate-background-color: #161a1f;
+    gridline-color: #202428;
+    border-radius: 10px;
+    border: 1px solid #202428;
+    selection-background-color: #263b2a;
+    selection-color: #f5f5f5;
+}
+
+/* Cabeçalho da tabela */
+QHeaderView::section {
+    background-color: #15181c;
+    color: #4cd964;  /* verde do mock */
+    border: none;
+    padding: 6px 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Scrollbars mais discretas */
+QScrollBar:vertical, QScrollBar:horizontal {
+    background: #111315;
+    border: none;
+}
+
+QScrollBar::handle {
+    background: #2a2f33;
+    border-radius: 4px;
+}
+
+QTableView {
+    background-color: #15181c;
+    alternate-background-color: #181c20;
+    gridline-color: #202428;
+    border-radius: 10px;
+    border: 1px solid #202428;
+    selection-background-color: #263b2a;
+    selection-color: #f5f5f5;
+}
+
+QTableView::item {
+    padding: 4px 8px;
+}
+
+QHeaderView::section {
+    background-color: #15181c;
+    color: #4cd964;
+    border: none;
+    padding: 6px 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
