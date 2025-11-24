@@ -153,6 +153,11 @@ class TransactionFilterWindow(QDialog):
         self._start_date.setPlaceholderText('dd/mm/aaaa')
         self._end_date.setPlaceholderText('dd/mm/aaaa')
 
+        self._min_amount.textChanged.connect(self._on_any_field_filled)
+        self._max_amount.textChanged.connect(self._on_any_field_filled)
+        self._start_date.textChanged.connect(self._on_any_field_filled)
+        self._end_date.textChanged.connect(self._on_any_field_filled)
+
     def _config_comboboxes(self) -> None:
         self._type_combobox.addItem('')
         self._category_combobox.addItem('')
@@ -161,8 +166,12 @@ class TransactionFilterWindow(QDialog):
         self._category_combobox.addItems(self._get_category_combobox_items())
 
         self._type_combobox.currentTextChanged.connect(self._on_type_selection_changed)
+        self._type_combobox.currentTextChanged.connect(self._on_combobox_selection_changed)
+        self._category_combobox.currentTextChanged.connect(self._on_combobox_selection_changed)
 
     def _config_buttons(self) -> None:
+        self._confirm_button.setEnabled(False)
+
         self._confirm_button.clicked.connect(self._on_confirm_button_clicked)
         self._reset_button.clicked.connect(self._on_reset_button_clicked)
 
@@ -212,6 +221,29 @@ class TransactionFilterWindow(QDialog):
         self._main_layout.addLayout(self._sorting_layout)
 
     # Métodos utilitários e slots -------------------------------------------------------------------------------------
+    def _on_any_field_filled(self, *_args) -> None:
+        if (self._min_amount.text()
+            or self._max_amount.text()
+            or self._start_date.text()
+            or self._end_date.text()
+        ):
+            self._confirm_button.setEnabled(True)
+        
+        else:
+            self._confirm_button.setEnabled(False)
+
+    def _on_combobox_selection_changed(self, *_args) -> None:
+        if self._type_combobox.currentText() or self._category_combobox.currentText():
+            self._confirm_button.setEnabled(True)
+
+        else:
+            self._confirm_button.setEnabled(False)
+
+    def _on_type_selection_changed(self, *_args) -> None:
+        self._category_combobox.clear()
+        self._category_combobox.addItem('')
+        self._category_combobox.addItems(self._get_category_combobox_items())
+
     def _on_confirm_button_clicked(self) -> None:
         self._build_filter_criteria()
         self._build_sorting_criteria()
@@ -222,11 +254,6 @@ class TransactionFilterWindow(QDialog):
         self._clear_filters = True
 
         self.accept()
-
-    def _on_type_selection_changed(self, *_args) -> None:
-        self._category_combobox.clear()
-        self._category_combobox.addItem('')
-        self._category_combobox.addItems(self._get_category_combobox_items())
 
     def _get_category_combobox_items(self) -> Iterable[str]:
         match self._type_combobox.currentText():

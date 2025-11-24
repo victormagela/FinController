@@ -81,6 +81,9 @@ class MainWindow(QMainWindow):
     def _configure_buttons(self) -> None:
         self.edit_button.setEnabled(False)
         self.delete_button.setEnabled(False)
+        if not self.table_model.rowCount() > 0:
+            self.filter_button.setEnabled(False)
+            self.report_button.setEnabled(False)
 
         self.add_button.clicked.connect(self._on_add_transaction_clicked)
         self.edit_button.clicked.connect(self._on_edit_transaction_clicked)
@@ -106,6 +109,12 @@ class MainWindow(QMainWindow):
             self.table_model.set_transaction_list(self._service.get_all_transactions())
             self.main_layout.addWidget(self.table)
             self.status_bar.showMessage('Transação adicionada com sucesso!')
+            
+            if not self.filter_button.isEnabled():
+                self.filter_button.setEnabled(True)
+
+            if not self.report_button.isEnabled():
+                self.report_button.setEnabled(True)
 
     def _on_edit_transaction_clicked(self) -> None:
         transaction_id = self.get_transaction_id()
@@ -145,6 +154,10 @@ class MainWindow(QMainWindow):
                 self.table_model.set_transaction_list(self._service.get_all_transactions())
                 self._disable_buttons()
                 self.status_bar.showMessage('Transação excluída com sucesso!')
+                if self.table_model.rowCount() < 1:
+                    self.filter_button.setEnabled(False)
+                    self.report_button.setEnabled(False)
+
             except ValueError as e:
                 error_window = self._configure_error_window(e)
                 error_window.exec()
@@ -161,6 +174,8 @@ class MainWindow(QMainWindow):
             
             if filter_window.clear_filters == True:
                 self.table_model.set_transaction_list(transaction_list)
+                if self.table_model.rowCount() > 0:
+                    self.report_button.setEnabled(True)
                 self.status_bar.showMessage('Filtros limpos!')
             
             else:
@@ -193,12 +208,19 @@ class MainWindow(QMainWindow):
                     transaction_list = self._service.sort_by_date(sorting_criteria.order, transaction_list)
 
                 self.table_model.set_transaction_list(transaction_list)
+                if self.table_model.rowCount() < 1:
+                    self.report_button.setEnabled(False)
                 self.status_bar.showMessage('Filtros aplicados com sucesso!')
 
     def _on_generate_report_clicked(self) -> None:
-        report_window = ReportWindow()
+        transaction_list = self.table_model.get_transaction_list()
+        self._service.update_statistics(transaction_list)
+        statistics = self._service.get_statistics()
+        start_date = self._service.get_min_date(transaction_list)
+        end_date = self._service.get_max_date(transaction_list)
+
+        report_window = ReportWindow(statistics, start_date, end_date)
         report_window.exec()
-        print('Gerar relatório')
 
     # Métodos utilitários ---------------------------------------------------------------------------------------------
     def get_transaction_id(self) -> Transaction:
