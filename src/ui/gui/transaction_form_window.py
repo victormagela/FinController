@@ -223,7 +223,7 @@ class TransactionFormWindow(QDialog):
 
     def _config_frame(self) -> None:
         self._main_card.setLayout(self._card_layout)
-        self._main_card.setObjectName("formCard")
+        self._main_card.setObjectName("Card")
 
     # Slots ----------------------------------------------------------------------------
     def _on_add_transaction_clicked(self) -> None:

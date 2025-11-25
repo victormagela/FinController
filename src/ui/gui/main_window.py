@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
 
     def _configure_frame(self) -> None:
         self.main_card.setLayout(self.card_layout)
-        self.main_card.setObjectName("formCard")
+        self.main_card.setObjectName("Card")
 
     def _configure_table(self) -> None:
         table = self.table
@@ -243,6 +243,8 @@ class MainWindow(QMainWindow):
         confirmation_window = QMessageBox()
         confirmation_window.setText("Tem certeza que deseja excluir esta transação?")
         confirmation_window.setIcon(QMessageBox.Icon.Question)
+        confirmation_window.setWindowIcon(WINDOW_ICON)
+        confirmation_window.setWindowTitle("Confirmação de Exclusão")
         confirmation_window.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )

@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QGroupBox,
     QButtonGroup,
+    QFrame,
+    QListView,
 )
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
@@ -26,6 +28,7 @@ from src.utils.constants import (
     EXPENSE_CATEGORY_TABLE,
     ALL_CATEGORIES_TABLE,
     TRANSACTION_TYPE_TABLE,
+    WINDOW_ICON,
 )
 import src.ui.formatter as formatter
 
@@ -80,11 +83,15 @@ class TransactionFilterWindow(QDialog):
 
         # Layouts ----------------------------------------------------------------------
         self._main_layout = QVBoxLayout()
+        self._card_layout = QVBoxLayout()
         self._form_layout = QFormLayout()
         self._buttons_layout = QHBoxLayout()
         self._sorting_layout = QHBoxLayout()
         self._sort_criteria_layout = QVBoxLayout()
         self._sort_order_layout = QVBoxLayout()
+
+        # Frame-------------------------------------------------------------------------
+        self._main_card = QFrame()
 
         # Group boxes ------------------------------------------------------------------
         self._sort_criteria_box = QGroupBox("Ordenar por: ")
@@ -117,6 +124,8 @@ class TransactionFilterWindow(QDialog):
         self._reset_button = QPushButton("Limpar Filtros")
 
         # Labels -----------------------------------------------------------------------
+        self._title_label = QLabel("Filtrar/Ordenar Transações")
+
         self._min_amount_label = QLabel("Valor Inicial: ")
         self._max_amount_label = QLabel("Valor Final: ")
 
@@ -127,7 +136,7 @@ class TransactionFilterWindow(QDialog):
 
         self._category_label = QLabel("Categoria: ")
 
-        self.initUI()
+        self._setup_user_interface()
 
     @property
     def filter_criteria(self) -> FilterCriteria:
@@ -141,9 +150,13 @@ class TransactionFilterWindow(QDialog):
     def clear_filters(self) -> bool:
         return self._clear_filters
 
-    def initUI(self) -> None:
+    def _setup_user_interface(self) -> None:
         self.setWindowTitle("Filtrar/Ordenar Transações")
+        self.setWindowIcon(WINDOW_ICON)
+        self.setMinimumWidth(600)
 
+        self._config_labels()
+        self._config_frame()
         self._config_layout()
         self._config_lines()
         self._config_comboboxes()
@@ -175,14 +188,14 @@ class TransactionFilterWindow(QDialog):
         self._start_date.setPlaceholderText("dd/mm/aaaa")
         self._end_date.setPlaceholderText("dd/mm/aaaa")
 
-        self._min_amount.textChanged.connect(self._on_any_field_filled)
-        self._max_amount.textChanged.connect(self._on_any_field_filled)
-        self._start_date.textChanged.connect(self._on_any_field_filled)
-        self._end_date.textChanged.connect(self._on_any_field_filled)
-
     def _config_comboboxes(self) -> None:
         self._type_combobox.addItem("")
         self._category_combobox.addItem("")
+
+        for combo in (self._type_combobox, self._category_combobox):
+            view = QListView()
+            view.setSpacing(0)
+            combo.setView(view)
 
         self._type_combobox.addItems(
             formatter.capitalize_dict_values(TRANSACTION_TYPE_TABLE).values()
@@ -190,16 +203,8 @@ class TransactionFilterWindow(QDialog):
         self._category_combobox.addItems(self._get_category_combobox_items())
 
         self._type_combobox.currentTextChanged.connect(self._on_type_selection_changed)
-        self._type_combobox.currentTextChanged.connect(
-            self._on_combobox_selection_changed
-        )
-        self._category_combobox.currentTextChanged.connect(
-            self._on_combobox_selection_changed
-        )
 
     def _config_buttons(self) -> None:
-        self._confirm_button.setEnabled(False)
-
         self._confirm_button.clicked.connect(self._on_confirm_button_clicked)
         self._reset_button.clicked.connect(self._on_reset_button_clicked)
 
@@ -213,7 +218,15 @@ class TransactionFilterWindow(QDialog):
         self._sort_order_group.addButton(self._ascending_button, 1)
         self._sort_order_group.addButton(self._descending_button, 2)
 
-    def _config_labels(self) -> None: ...
+        self._confirm_button.setObjectName("confirmButton")
+        self._confirm_button.setProperty("class", "primaryButton")
+        self._reset_button.setProperty("class", "secondaryButton")
+
+        self._confirm_button.setMinimumHeight(36)
+        self._reset_button.setMinimumHeight(36)
+
+    def _config_labels(self) -> None:
+        self._title_label.setObjectName("TitleLabel")
 
     def _config_layout(self):
         self._form_layout.addRow(self._min_amount_label, self._min_amount)
@@ -226,6 +239,7 @@ class TransactionFilterWindow(QDialog):
 
         self._form_layout.addRow(self._category_label, self._category_combobox)
 
+        self._buttons_layout.addStretch()
         self._buttons_layout.addWidget(self._confirm_button)
         self._buttons_layout.addWidget(self._reset_button)
 
@@ -243,30 +257,26 @@ class TransactionFilterWindow(QDialog):
         self._sorting_layout.addWidget(self._sort_criteria_box)
         self._sorting_layout.addWidget(self._sort_order_box)
 
-        self._main_layout.addLayout(self._buttons_layout)
-        self._main_layout.addLayout(self._form_layout)
-        self._main_layout.addLayout(self._sorting_layout)
+        self._card_layout.addWidget(self._title_label)
+        self._card_layout.addSpacing(12)
+        self._card_layout.addLayout(self._form_layout)
+        self._card_layout.addSpacing(12)
+        self._card_layout.addLayout(self._sorting_layout)
+        self._card_layout.addSpacing(12)
+        self._card_layout.addLayout(self._buttons_layout)
+
+        self._card_layout.setContentsMargins(16, 16, 16, 16)
+        self._card_layout.setSpacing(12)
+
+        self._main_layout.addWidget(self._main_card)
+        self._main_layout.setContentsMargins(16, 16, 16, 16)
+        self._main_layout.setSpacing(12)
+
+    def _config_frame(self) -> None:
+        self._main_card.setLayout(self._card_layout)
+        self._main_card.setObjectName("Card")
 
     # Métodos utilitários e slots ------------------------------------------------------
-    def _on_any_field_filled(self, *_args) -> None:
-        if (
-            self._min_amount.text()
-            or self._max_amount.text()
-            or self._start_date.text()
-            or self._end_date.text()
-        ):
-            self._confirm_button.setEnabled(True)
-
-        else:
-            self._confirm_button.setEnabled(False)
-
-    def _on_combobox_selection_changed(self, *_args) -> None:
-        if self._type_combobox.currentText() or self._category_combobox.currentText():
-            self._confirm_button.setEnabled(True)
-
-        else:
-            self._confirm_button.setEnabled(False)
-
     def _on_type_selection_changed(self, *_args) -> None:
         self._category_combobox.clear()
         self._category_combobox.addItem("")
