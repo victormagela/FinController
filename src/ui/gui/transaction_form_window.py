@@ -12,8 +12,9 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QComboBox,
     QWidget,
+    QFrame,
 )
-from PySide6.QtCore import QRegularExpression
+from PySide6.QtCore import QRegularExpression, Qt
 from PySide6.QtGui import QRegularExpressionValidator
 
 from src.utils.constants import (
@@ -23,6 +24,7 @@ from src.utils.constants import (
     AMOUNT_PATTERN,
     DATE_PATTERN,
     DESCRIPTION_PATTERN,
+    WINDOW_ICON,
 )
 from src.models.transaction import Transaction
 import src.ui.formatter as formatter
@@ -45,6 +47,10 @@ class TransactionFormWindow(QDialog):
             self._transaction = transaction
 
         self._main_layout = QVBoxLayout()
+
+        self._main_card = QFrame()
+        self._card_layout = QVBoxLayout()
+
         self._form_layout = QFormLayout()
 
         # Line Edits -------------------------------------------------------------------
@@ -60,6 +66,8 @@ class TransactionFormWindow(QDialog):
         self._confirm_button = QPushButton()
 
         # Labels -----------------------------------------------------------------------
+        self.title_label = QLabel()
+
         self._amount_label = QLabel("Valor:")
         self._date_label = QLabel("Data:")
         self._type_label = QLabel("Tipo:")
@@ -72,7 +80,7 @@ class TransactionFormWindow(QDialog):
         if mode == DialogMode.EDITMODE:
             self._user_input_dict: dict[str, str] = {}
 
-        self.initUI(mode)
+        self._configure_user_interface(mode)
 
     @property
     def user_input_list(self) -> list[dict[str, str]]:
@@ -82,19 +90,30 @@ class TransactionFormWindow(QDialog):
     def user_input_dict(self) -> dict[str, str]:
         return deepcopy(self._user_input_dict)
 
-    def initUI(self, mode) -> None:
+    def _configure_user_interface(self, mode) -> None:
+        self.setWindowIcon(WINDOW_ICON)
+
         if mode == DialogMode.CREATEMODE:
             self.setWindowTitle("Nova Transação")
 
         if mode == DialogMode.EDITMODE:
             self.setWindowTitle("Editar Transação")
 
+        self._config_labels(mode)
         self._config_lines(mode)
-        self._config_button(mode)
         self._config_combobox(mode)
+        self._config_button(mode)
+        self._config_frame()
         self._config_layout()
 
         self.setLayout(self._main_layout)
+
+    def _config_labels(self, mode) -> None:
+        if mode == DialogMode.CREATEMODE:
+            self.title_label.setText("Nova Transação")
+
+        else:
+            self.title_label.setText("Editar Transação")
 
     def _config_lines(self, mode) -> None:
         self._description_line.setValidator(
@@ -155,8 +174,6 @@ class TransactionFormWindow(QDialog):
                 formatter.format_category(self._transaction.category)
             )
 
-    def _config_labels(self) -> None: ...
-
     def _config_button(self, mode) -> None:
         if mode == DialogMode.CREATEMODE:
             self._confirm_button.setEnabled(False)
@@ -174,9 +191,16 @@ class TransactionFormWindow(QDialog):
         self._form_layout.addRow(self._category_label, self._category_combobox)
         self._form_layout.addRow(self._description_label, self._description_line)
 
-        self._main_layout.addWidget(self._confirm_button)
+        self._main_layout.addWidget(self._main_card)
 
-        self._main_layout.addLayout(self._form_layout)
+        self._card_layout.addWidget(
+            self.title_label, alignment=Qt.AlignmentFlag.AlignHCenter
+        )
+        self._card_layout.addLayout(self._form_layout)
+        self._card_layout.addWidget(self._confirm_button)
+
+    def _config_frame(self) -> None:
+        self.setLayout(self._card_layout)
 
     # Slots ----------------------------------------------------------------------------
     def _on_add_transaction_clicked(self) -> None:

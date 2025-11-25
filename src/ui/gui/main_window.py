@@ -1,7 +1,5 @@
 """Define a janela principal da aplicação FinController."""
 
-from pathlib import Path
-
 from PySide6.QtWidgets import (
     QWidget,
     QMainWindow,
@@ -16,7 +14,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon
 
 from src.ui.gui.table_model import TableModel
 from src.ui.gui.transaction_form_window import (
@@ -31,14 +28,14 @@ from src.ui.gui.report_window import ReportWindow
 from src.service.transaction_service import TransactionService
 from src.models.transaction import Transaction
 
-
-ICONS_DIR = Path(__file__).parent.parent.parent.parent / "assets" / "icons"
-ADD_ICON = QIcon(str(ICONS_DIR / "add_fincontroller.svg"))
-EDIT_ICON = QIcon(str(ICONS_DIR / "edit_fincontroller.svg"))
-DELETE_ICON = QIcon(str(ICONS_DIR / "delete_fincontroller.svg"))
-FILTER_ICON = QIcon(str(ICONS_DIR / "filter_fincontroller.svg"))
-REPORT_ICON = QIcon(str(ICONS_DIR / "docs_fincontroller.svg"))
-WINDOW_ICON = QIcon(str(ICONS_DIR / "app_icon_fincontroller.svg"))
+from src.utils.constants import (
+    ADD_ICON,
+    EDIT_ICON,
+    DELETE_ICON,
+    FILTER_ICON,
+    REPORT_ICON,
+    WINDOW_ICON,
+)
 
 
 class MainWindow(QMainWindow):
