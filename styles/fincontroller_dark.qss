@@ -7,8 +7,12 @@ QMainWindow, QWidget {
     font-weight: 560;
 }
 
+QDialog {
+    background-color: #101214;
+}
+
 /* Card principal da área de conteúdo */
-QFrame#mainCard {
+QFrame#formCard {
     background-color: #15181c;
     border-radius: 12px;
     border: 1px solid #202428;
@@ -16,9 +20,12 @@ QFrame#mainCard {
 
 /* Título da janela */
 QLabel#titleLabel {
-    background-color: #15181c;
     font-size: 16pt;
     font-weight: 600;
+}
+
+QLabel {
+    background-color: transparent;
 }
 
 /* Botões grandes do topo */
@@ -40,14 +47,83 @@ QPushButton.mainActionButton:pressed {
     background-color: #1a1f23;
 }
 
+QPushButton[class~="primaryButton"] {
+    background-color: #2ecc71;
+    border: 1px solid #2ecc71;
+    border-radius: 8px;
+    padding: 6px 16px;
+    color: #101214;
+    font-weight: 560;
+}
+
+QPushButton[class~="primaryButton"]:hover {
+    background-color: #39d97c;
+    border-color: #39d97c;
+}
+
+QPushButton[class~="primaryButton"]:pressed {
+    background-color: #26b864;
+    border-color: #26b864;
+}
+
 QPushButton:disabled {
     background-color: #181c20;
     border-color: #202428;
     color: #777c82;
 }
 
+QLineEdit,
+QComboBox {
+    background-color: #262d33;
+    border: 1px solid #262c31;
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+QLineEdit:focus,
+QComboBox:focus {
+    border-color: #2ecc71;
+}
+
+QLineEdit:disabled,
+QComboBox:disabled {
+    background-color: #14171b;
+    color: #777c82;
+    border-color: #202428;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #15181c;
+    border: 1px solid #262c31;
+    padding: 0px;
+    margin: 0px;
+    outline: none;
+}
+
+QComboBox QAbstractItemView::item {
+    padding: 4px 8px;
+    margin: 0px;
+}
+
+/* Lista usada pelos QComboBox */
+QListView {
+    background-color: #15181c;
+    border: 1px solid #262c31;
+    padding: 0px;
+    margin: 0px;
+    outline: none;
+    selection-background-color: #263b2a;
+    selection-color: #f5f5f5;
+}           
+
+QListView::item {
+    padding: 4px 8px;
+    margin: 0px;
+}
+
 /* Scrollbars mais discretas */
-QScrollBar:vertical, QScrollBar:horizontal {
+QScrollBar:vertical,
+QScrollBar:horizontal {
     background: #111315;
     border: none;
 }

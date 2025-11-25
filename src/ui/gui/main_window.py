@@ -124,9 +124,8 @@ class MainWindow(QMainWindow):
         self.button_layout.setSpacing(12)
 
     def _configure_frame(self) -> None:
-        self.main_card.setObjectName("mainCard")
-
         self.main_card.setLayout(self.card_layout)
+        self.main_card.setObjectName("formCard")
 
     def _configure_table(self) -> None:
         table = self.table

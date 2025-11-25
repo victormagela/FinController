@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QWidget,
     QFrame,
+    QHBoxLayout,
+    QListView,
 )
 from PySide6.QtCore import QRegularExpression, Qt
 from PySide6.QtGui import QRegularExpressionValidator
@@ -53,6 +55,8 @@ class TransactionFormWindow(QDialog):
 
         self._form_layout = QFormLayout()
 
+        self._button_layout = QHBoxLayout()
+
         # Line Edits -------------------------------------------------------------------
         self._amount_line = QLineEdit()
         self._date_line = QLineEdit()
@@ -92,6 +96,7 @@ class TransactionFormWindow(QDialog):
 
     def _configure_user_interface(self, mode) -> None:
         self.setWindowIcon(WINDOW_ICON)
+        self.setMinimumWidth(600)
 
         if mode == DialogMode.CREATEMODE:
             self.setWindowTitle("Nova Transação")
@@ -109,6 +114,8 @@ class TransactionFormWindow(QDialog):
         self.setLayout(self._main_layout)
 
     def _config_labels(self, mode) -> None:
+        self.title_label.setObjectName("titleLabel")
+
         if mode == DialogMode.CREATEMODE:
             self.title_label.setText("Nova Transação")
 
@@ -157,6 +164,11 @@ class TransactionFormWindow(QDialog):
             formatter.capitalize_dict_values(TRANSACTION_TYPE_TABLE).values()
         )
 
+        for combo in (self._type_combobox, self._category_combobox):
+            view = QListView()
+            view.setSpacing(0)
+            combo.setView(view)
+
         if mode == DialogMode.CREATEMODE:
             self._type_combobox.currentTextChanged.connect(
                 self._on_type_selection_changed
@@ -175,6 +187,10 @@ class TransactionFormWindow(QDialog):
             )
 
     def _config_button(self, mode) -> None:
+        self._confirm_button.setObjectName("confirmButton")
+        self._confirm_button.setProperty("class", "primaryButton")
+        self._confirm_button.setFixedHeight(40)
+
         if mode == DialogMode.CREATEMODE:
             self._confirm_button.setEnabled(False)
             self._confirm_button.setText("Adicionar Transação")
@@ -185,22 +201,29 @@ class TransactionFormWindow(QDialog):
             self._confirm_button.clicked.connect(self._on_edit_transaction_clicked)
 
     def _config_layout(self) -> None:
+        self._button_layout.addStretch()
+        self._button_layout.addWidget(self._confirm_button)
+
         self._form_layout.addRow(self._amount_label, self._amount_line)
         self._form_layout.addRow(self._date_label, self._date_line)
         self._form_layout.addRow(self._type_label, self._type_combobox)
         self._form_layout.addRow(self._category_label, self._category_combobox)
         self._form_layout.addRow(self._description_label, self._description_line)
 
-        self._main_layout.addWidget(self._main_card)
-
         self._card_layout.addWidget(
             self.title_label, alignment=Qt.AlignmentFlag.AlignHCenter
         )
         self._card_layout.addLayout(self._form_layout)
-        self._card_layout.addWidget(self._confirm_button)
+        self._card_layout.addLayout(self._button_layout)
+        self._card_layout.setContentsMargins(16, 16, 16, 16)
+        self._card_layout.setSpacing(16)
+
+        self._main_layout.addWidget(self._main_card)
+        self._main_layout.setContentsMargins(0, 0, 0, 0)
 
     def _config_frame(self) -> None:
-        self.setLayout(self._card_layout)
+        self._main_card.setLayout(self._card_layout)
+        self._main_card.setObjectName("formCard")
 
     # Slots ----------------------------------------------------------------------------
     def _on_add_transaction_clicked(self) -> None:
