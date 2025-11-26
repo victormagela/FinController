@@ -10,11 +10,15 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QAbstractItemView,
+    QFrame,
+    QHeaderView,
+    QTabWidget,
 )
 from PySide6.QtCore import Qt
 
 import src.ui.formatter as formatter
 from src.service.transaction_statistics import TransactionStatistics
+from src.utils.constants import WINDOW_ICON
 
 
 class ReportWindow(QDialog):
@@ -32,13 +36,19 @@ class ReportWindow(QDialog):
 
         # Layouts ----------------------------------------------------------------------
         self._main_layout = QVBoxLayout()
+        self._card_layout = QVBoxLayout()
         self._general_overview_layout = QVBoxLayout()
         self._type_overview_layout = QHBoxLayout()
         self._income_overview_layout = QVBoxLayout()
         self._expense_overview_layout = QVBoxLayout()
-        self._breakdown_table_layout = QHBoxLayout()
         self._income_breakdown_layout = QVBoxLayout()
         self._expense_breakdown_layout = QVBoxLayout()
+
+        # Frame ------------------------------------------------------------------------
+        self._main_card = QFrame()
+
+        # Tabs -------------------------------------------------------------------------
+        self._breakdown_tabs = QTabWidget()
 
         # QGroupboxes ------------------------------------------------------------------
         self._general_overview_box = QGroupBox("Visão Geral")
@@ -48,7 +58,10 @@ class ReportWindow(QDialog):
         self._expense_breakdown_box = QGroupBox("Breakdown por Categorias de Despesa")
 
         # QLabels ----------------------------------------------------------------------
+        self._title_label = QLabel("Relatório de Transações")
         self._general_overview_label = QLabel()
+        self._income_overview_title = QLabel("Receitas")
+        self._expense_overview_title = QLabel("Despesas")
         self._income_overview_label = QLabel()
         self._expense_overview_label = QLabel()
 
@@ -60,14 +73,16 @@ class ReportWindow(QDialog):
 
     def _setup_UI(self) -> None:
         self.setWindowTitle("Relatório")
+        self.setWindowIcon(WINDOW_ICON)
 
-        self._configure_layouts()
-        self._configure_labels()
-        self._configure_tables()
+        self._config_labels()
+        self._config_frame()
+        self._config_layouts()
+        self._config_tables()
 
         self.setLayout(self._main_layout)
 
-    def _configure_layouts(self) -> None:
+    def _config_layouts(self) -> None:
         self._general_overview_layout.addWidget(self._general_overview_label)
         self._general_overview_box.setLayout(self._general_overview_layout)
 
@@ -86,19 +101,46 @@ class ReportWindow(QDialog):
         self._expense_breakdown_layout.addWidget(self._expense_breakdown_table)
         self._expense_breakdown_box.setLayout(self._expense_breakdown_layout)
 
-        self._breakdown_table_layout.addWidget(self._income_breakdown_box)
-        self._breakdown_table_layout.addWidget(self._expense_breakdown_box)
+        if self._statistics.income_transaction_count:
+            self._breakdown_tabs.addTab(self._income_breakdown_box, "Receitas")
 
-        self._main_layout.addWidget(self._general_overview_box)
-        self._main_layout.addLayout(self._type_overview_layout)
-        self._main_layout.addLayout(self._breakdown_table_layout)
+        if self._statistics.expense_transaction_count:
+            self._breakdown_tabs.addTab(self._expense_breakdown_box, "Despesas")
+
+        self._card_layout.addWidget(
+            self._title_label, alignment=Qt.AlignmentFlag.AlignHCenter
+        )
+        self._card_layout.addSpacing(8)
+        self._card_layout.addWidget(self._general_overview_box)
+        self._card_layout.addSpacing(8)
+        self._card_layout.addLayout(self._type_overview_layout)
+        self._card_layout.addSpacing(12)
+        if self._breakdown_tabs.count() > 0:
+            self._card_layout.addWidget(self._breakdown_tabs)
+
+        self._card_layout.setContentsMargins(16, 16, 16, 16)
+        self._card_layout.setSpacing(12)
+
+        self._main_layout.addWidget(self._main_card)
+        self._main_layout.setContentsMargins(16, 16, 16, 16)
+        self._main_layout.setSpacing(12)
+
         if not self._statistics.income_transaction_count:
             self._income_breakdown_box.hide()
 
         if not self._statistics.expense_transaction_count:
             self._expense_breakdown_box.hide()
 
-    def _configure_labels(self) -> None:
+    def _config_labels(self) -> None:
+        self._title_label.setObjectName("TitleLabel")
+
+        self._income_overview_title.setProperty("class", "overviewTitle")
+        self._expense_overview_title.setProperty("class", "overviewTitle")
+
+        self._income_overview_label.setProperty("class", "overviewBody")
+        self._expense_overview_label.setProperty("class", "overviewBody")
+        self._general_overview_label.setProperty("class", "overviewBody")
+
         formatted_balance = formatter.format_currency_for_ptbr(self._statistics.balance)
 
         start_date_str = formatter.format_date(self._start_date)
@@ -120,15 +162,43 @@ class ReportWindow(QDialog):
 
         self._general_overview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-    def _configure_tables(self) -> None:
-        self._configure_income_table()
-        self._configure_expense_table()
+    def _config_tables(self) -> None:
+        self._config_income_table()
+        self._config_expense_table()
+
+        for table in (self._income_breakdown_table, self._expense_breakdown_table):
+            header = table.horizontalHeader()
+            header.setHighlightSections(False)
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+            table.setWordWrap(False)
+            table.setAlternatingRowColors(True)
+            table.setShowGrid(False)
+            table.verticalHeader().setVisible(False)
+            table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+            table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            table.setStyleSheet(
+                """
+            QTableWidget {
+                font-size: 11pt;
+                font-weight: 400;
+            }
+            QHeaderView::section {
+                font-size: 10pt;
+                font-weight: 500;
+            }
+            """
+            )
 
         if not self._statistics.income_transaction_count:
             self._income_breakdown_table.hide()
 
         if not self._statistics.expense_transaction_count:
             self._expense_breakdown_table.hide()
+
+    def _config_frame(self) -> None:
+        self._main_card.setLayout(self._card_layout)
+        self._main_card.setObjectName("Card")
 
     # Métodos utilitários --------------------------------------------------------------
     def _get_income_overview_text(self) -> str:
@@ -205,7 +275,7 @@ class ReportWindow(QDialog):
             }"
         )
 
-    def _configure_income_table(self) -> None:
+    def _config_income_table(self) -> None:
         if not self._statistics.income_transaction_count:
             return
 
@@ -242,11 +312,7 @@ class ReportWindow(QDialog):
             table.setItem(row, 3, QTableWidgetItem(amount_percentage_str))
             table.setItem(row, 4, QTableWidgetItem(total_str))
 
-        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-
-    def _configure_expense_table(self) -> None:
+    def _config_expense_table(self) -> None:
         if not self._statistics.expense_transaction_count:
             return
 
@@ -282,7 +348,3 @@ class ReportWindow(QDialog):
             table.setItem(row, 2, QTableWidgetItem(count_percentage_str))
             table.setItem(row, 3, QTableWidgetItem(amount_percentage_str))
             table.setItem(row, 4, QTableWidgetItem(total_str))
-
-        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.setFocusPolicy(Qt.FocusPolicy.NoFocus)

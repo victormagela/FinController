@@ -28,6 +28,17 @@ QLabel {
     background-color: transparent;
 }
 
+QLabel.overviewTitle {
+    font-size: 13pt;
+    font-weight: 560;
+    color: #4cd964;
+}
+
+QLabel.overviewBody {
+    font-size: 11pt;
+    font-weight: 400;  
+}
+
 /* Botões grandes do topo */
 QPushButton.mainActionButton {
     background-color: #1f2428;
@@ -190,6 +201,7 @@ QScrollBar::handle {
     border-radius: 4px;
 }
 
+QTableWidget,
 QTableView {
     background-color: #15181c;
     alternate-background-color: #181c20;
@@ -200,6 +212,7 @@ QTableView {
     selection-color: #f5f5f5;
 }
 
+QTableWidget::item,
 QTableView::item {
     padding: 4px 8px;
 }
@@ -219,13 +232,11 @@ QMessageBox {
     border: 1px solid #202428;
 }
 
-/* Texto da mensagem */
 QMessageBox QLabel {
     color: #f5f5f5;
     font-size: 11pt;
 }
 
-/* Botões da QMessageBox (podem reaproveitar seu estilo de botão) */
 QMessageBox QPushButton {
     background-color: #1f2428;
     border: 1px solid #262c31;
@@ -246,4 +257,23 @@ QMessageBox QPushButton:disabled {
     background-color: #181c20;
     border-color: #202428;
     color: #777c82;
+}
+
+ QTabWidget::pane {
+    border: 1px solid #202428;
+    border-radius: 8px;
+    background-color: #15181c;
+    margin-top: 4px;
+}
+
+QTabBar::tab {
+    background-color: #181c20;
+    color: #f5f5f5;
+    padding: 4px 12px;
+    margin-right: 2px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border: 1px solid #202428;
+    font-size: 11pt;
+    font-weight: 500;
 }

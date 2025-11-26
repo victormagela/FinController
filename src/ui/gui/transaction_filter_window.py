@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QListView,
 )
-from PySide6.QtCore import QRegularExpression
+from PySide6.QtCore import QRegularExpression, Qt
 from PySide6.QtGui import QRegularExpressionValidator
 
 from src.utils.constants import (
@@ -257,7 +257,9 @@ class TransactionFilterWindow(QDialog):
         self._sorting_layout.addWidget(self._sort_criteria_box)
         self._sorting_layout.addWidget(self._sort_order_box)
 
-        self._card_layout.addWidget(self._title_label)
+        self._card_layout.addWidget(
+            self._title_label, alignment=Qt.AlignmentFlag.AlignHCenter
+        )
         self._card_layout.addSpacing(12)
         self._card_layout.addLayout(self._form_layout)
         self._card_layout.addSpacing(12)
