@@ -237,7 +237,6 @@ class TransactionFormWindow(QDialog):
             str_dict["description"] = description
 
         self._amount_line.clear()
-        self._date_line.clear()
         self._description_line.clear()
 
         self._user_input_list.append(str_dict)

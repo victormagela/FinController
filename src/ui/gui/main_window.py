@@ -292,6 +292,7 @@ class MainWindow(QMainWindow):
         if result == TransactionFilterWindow.DialogCode.Accepted:
             transaction_list = self._service.get_all_transactions()
 
+            self._disable_buttons()
             if filter_window.clear_filters:
                 self.table_model.set_transaction_list(transaction_list)
                 if self.table_model.rowCount() > 0:
