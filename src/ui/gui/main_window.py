@@ -54,6 +54,7 @@ class MainWindow(QMainWindow):
 
         self.card_layout = QVBoxLayout()
         self.button_layout = QHBoxLayout()
+        self.no_table_layout = QVBoxLayout()
 
         # Botões -----------------------------------------------------------------------
         self.add_button = QPushButton("Adicionar\nTransação")
@@ -113,7 +114,10 @@ class MainWindow(QMainWindow):
             self.table_model.set_transaction_list(transactions)
 
         else:
-            self.card_layout.addWidget(self.no_table_label)
+            self.card_layout.addLayout(self.no_table_layout)
+            self.no_table_layout.addWidget(self.no_table_label)
+            self.card_layout.setStretchFactor(self.no_table_layout, 1)
+            self.card_layout.setStretchFactor(self.button_layout, 0)
 
         self.main_layout.setContentsMargins(16, 16, 16, 16)
         self.main_layout.setSpacing(0)
@@ -184,7 +188,7 @@ class MainWindow(QMainWindow):
 
     def _configure_labels(self) -> None:
         self.title_label.setObjectName("titleLabel")
-        self.no_table_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.no_table_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     # Slots principais -----------------------------------------------------------------
     def _on_add_transaction_clicked(self) -> None:
@@ -194,22 +198,29 @@ class MainWindow(QMainWindow):
         try:
             for user_input in input_list:
                 self._service.add_transaction(user_input)
+
+            if input_list:
+                self.status_bar.showMessage("Transação adicionada com sucesso!")
+
+                if self.table.isHidden():
+                    self.table.show()
+                self.no_table_label.hide()
+                self.table_model.set_transaction_list(
+                    self._service.get_all_transactions()
+                )
+                self.card_layout.addWidget(self.table)
+
+                if not self.filter_button.isEnabled():
+                    self.filter_button.setEnabled(True)
+
+                if not self.report_button.isEnabled():
+                    self.report_button.setEnabled(True)
         except ValueError as e:
             error_window = self._configure_error_window(e)
+            error_window.setWindowIcon(WINDOW_ICON)
             error_window.exec()
-
-        if input_list:
-            self.card_layout.removeWidget(self.no_table_label)
-            self.no_table_label.hide()
-            self.table_model.set_transaction_list(self._service.get_all_transactions())
-            self.card_layout.addWidget(self.table)
-            self.status_bar.showMessage("Transação adicionada com sucesso!")
-
-            if not self.filter_button.isEnabled():
-                self.filter_button.setEnabled(True)
-
-            if not self.report_button.isEnabled():
-                self.report_button.setEnabled(True)
+            if self.edit_button.isEnabled() and self.delete_button.isEnabled():
+                self._disable_buttons()
 
     def _on_edit_transaction_clicked(self) -> None:
         transaction_id = self._get_transaction_id()
@@ -229,13 +240,13 @@ class MainWindow(QMainWindow):
                 self._service.update_transaction_description(
                     transaction_id, input_dict.get("description")
                 )
+                self.status_bar.showMessage("Transação modificada com sucesso!")
+                self._disable_buttons()
             except ValueError as e:
                 error_window = self._configure_error_window(e)
                 error_window.exec()
 
             self.table_model.set_transaction_list(self._service.get_all_transactions())
-            self._disable_buttons()
-            self.status_bar.showMessage("Transação modificada com sucesso!")
 
     def _on_delete_transaction_clicked(self) -> None:
         transaction_id = self._get_transaction_id()
@@ -264,6 +275,8 @@ class MainWindow(QMainWindow):
                 if self.table_model.rowCount() < 1:
                     self.filter_button.setEnabled(False)
                     self.report_button.setEnabled(False)
+                    self.no_table_label.show()
+                    self.table.hide()
 
             except ValueError as e:
                 error_window = self._configure_error_window(e)
