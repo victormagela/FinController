@@ -54,7 +54,6 @@ class MainWindow(QMainWindow):
 
         self.card_layout = QVBoxLayout()
         self.button_layout = QHBoxLayout()
-        self.no_table_layout = QVBoxLayout()
 
         # Botões -----------------------------------------------------------------------
         self.add_button = QPushButton("Adicionar\nTransação")
@@ -114,9 +113,8 @@ class MainWindow(QMainWindow):
             self.table_model.set_transaction_list(transactions)
 
         else:
-            self.card_layout.addLayout(self.no_table_layout)
-            self.no_table_layout.addWidget(self.no_table_label)
-            self.card_layout.setStretchFactor(self.no_table_layout, 1)
+            self.card_layout.addWidget(self.no_table_label)
+            self.card_layout.setStretchFactor(self.no_table_label, 1)
             self.card_layout.setStretchFactor(self.button_layout, 0)
 
         self.main_layout.setContentsMargins(16, 16, 16, 16)
@@ -275,8 +273,10 @@ class MainWindow(QMainWindow):
                 if self.table_model.rowCount() < 1:
                     self.filter_button.setEnabled(False)
                     self.report_button.setEnabled(False)
-                    self.no_table_label.show()
                     self.table.hide()
+                    self.card_layout.addWidget(self.no_table_label)
+                    self.card_layout.setStretchFactor(self.no_table_label, 1)
+                    self.no_table_label.show()
 
             except ValueError as e:
                 error_window = self._configure_error_window(e)
